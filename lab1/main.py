@@ -18,6 +18,9 @@ PIXEL = 96.358115
 POINT_RADIOUS = 5
 INITIAL_WIDTH = 653
 INITIAL_HEIGHT = 560
+MARKERSIZE = 5
+EPS = 1e-8
+RIGHT_BUTTON = 3
 
 
 class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
@@ -36,7 +39,7 @@ class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
 
         self.figure = plt.figure(figsize=(self.width / PIXEL, self.height / PIXEL))
         self.canvas = FigureCanvas(self.figure)
-        self.canvas.mpl_connect('button_press_event', self.click_on_plot)
+        self.canvas.mpl_connect('button_press_event', self.draw_point_onclick)
         self.toolbar = NavigationToolBar(self.canvas, self)
         self.axes = self.figure.add_subplot(111)
         #self.axes.plot([1, 2, 3, 4], [5, 6, 7, 8], '*')
@@ -142,16 +145,25 @@ class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
             self.error_handling(POINTS_ERROR)
             return
         
-        self.axes.plot(self.points_x1, self.points_y1, 'go', markersize=10)
-        self.axes.plot(self.points_x2, self.points_y2, 'ro', markersize=10)
+        self.axes.plot(self.points_x1, self.points_y1, 'go', markersize=MARKERSIZE)
+        self.axes.plot(self.points_x2, self.points_y2, 'ro', markersize=MARKERSIZE)
         self.update_canvas()
         
         
-    def click_on_plot(self):
-        pass
+    def draw_point(self, x, y, color):
+        self.axes.plot(x, y, color, markersize=MARKERSIZE)
+        self.update_canvas()
         
         
-     
+    def draw_point_onclick(self, event):
+        if event.button == RIGHT_BUTTON:
+            sets = ('Первое множество', 'Второе множество')
+            color, ok = QtWidgets.QInputDialog.getItem(self, 'В какое множество добавить точку?', 'Множества:', sets, 0, False)
+            if color == 'Первое множество':
+                self.draw_point(event.xdata, event.ydata, 'go')
+            elif color == 'Второе множество':
+                self.draw_point(event.xdata, event.ydata, 'ro')
+            
         
 def main():
     app = QtWidgets.QApplication(sys.argv)
