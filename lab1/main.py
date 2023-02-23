@@ -1,4 +1,4 @@
-import sys, re  # sys - для передачи argv в QApplication
+import sys, re, copy  # sys - для передачи argv в QApplication
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import Qt
 
@@ -47,8 +47,6 @@ class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         
         self.points_x2 = []
         self.points_y2 = []
-    
-        self.states = []
         
         self.from_line_edit = False
         
@@ -56,6 +54,7 @@ class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.init_plot()
         
         self.command_stack = []
+        self.states = []
         
         #c1 = Circle((4, 5), 6, fill=False)
         #self.axes.add_patch(c1)
@@ -63,7 +62,7 @@ class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.number_of_points = 0
         self.number_first_points = 0
         self.number_second_points = 0
-        self.current_state = {'number1': self.number_first_points, 'number2': self.number_second_points, 'all': self.number_of_points, 'point_x1': self.points_x1, 'point_y1': self.points_y1, 'point_x2': self.points_x2, 'point_y2': self.points_y2, 'table': self.tableWidget}
+        self.current_state = {'number1': self.number_first_points, 'number2': self.number_second_points, 'all': self.number_of_points, 'point_x1': self.points_x1, 'point_y1': self.points_y1, 'point_x2': self.points_x2, 'point_y2': self.points_y2}
         
         self.lineEdit.returnPressed.connect(self.create_table) # Ввод по нажатию Enter
         self.pushButton_5.clicked.connect(self.draw_points) # Привязка отрисовки точек к кнопке
@@ -124,9 +123,10 @@ class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         if self.from_line_edit == False: 
             self.input_number_of_points() # Получение количества точек
             number = self.number_of_points
+            number = self.current_state['all']
         else:
             number = 1
-        if self.number_of_points == 0 and self.from_line_edit == False:
+        if self.current_state['all'] == 0 and self.from_line_edit == False:
             self.tableWidget.setColumnCount(0)
             self.tableWidget.setRowCount(0)
             return
@@ -142,7 +142,9 @@ class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
     def clear_points(self):
             self.tableWidget.clear()
             self.points_x1 = []
-            self.points_y1 = []     
+            self.current_state['point_x1'] = []
+            self.points_y1 = []
+            self.current_state['point_y1'] = []     
             self.error_handling(-2)        
         
         
@@ -153,7 +155,7 @@ class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         for i in range(begin, end):
             x = self.tableWidget.item(i, 0)
             y = self.tableWidget.item(i, 1)
-            if begin == 0 and self.number_first_points != 0:
+            if begin == 0 and self.current_state['number1'] != 0:
                 x.setBackground(GREEN)
                 y.setBackground(GREEN)
             else:
@@ -173,8 +175,8 @@ class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         
         
     def get_points(self):
-        self.read_points_from_one_set(0, self.number_first_points, self.points_x1, self.points_y1)
-        self.read_points_from_one_set(self.number_first_points, self.number_of_points, self.points_x2, self.points_y2)
+        self.read_points_from_one_set(0, self.current_state['number1'], self.current_state['point_x1'], self.current_state['point_y1'])
+        self.read_points_from_one_set(self.current_state['number1'], self.current_state['all'], self.current_state['point_x2'], self.current_state['point_y2'])
         
     
     def update_canvas(self):
@@ -184,18 +186,17 @@ class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         
     def draw_points(self, from_table):
         if from_table == False: self.get_points()
-        if self.number_first_points == 0 and self.number_second_points == 0:
+        if self.current_state['number1'] == 0 and self.current_state['number2'] == 0:
             self.error_handling(POINTS_ERROR)
             return
         
-        if self.points_x1: self.axes.plot(self.points_x1, self.points_y1, 'go', markersize=MARKERSIZE)
-        if self.points_x2: self.axes.plot(self.points_x2, self.points_y2, 'ro', markersize=MARKERSIZE)
+        if self.current_state['point_x1']: self.axes.plot(self.current_state['point_x1'], self.current_state['point_y1'], 'go', markersize=MARKERSIZE)
+        if self.current_state['point_x2']: self.axes.plot(self.current_state['point_x2'], self.current_state['point_y2'], 'ro', markersize=MARKERSIZE)
         self.update_canvas()
         
         if from_table == False: 
             self.command_stack.append(DRAW)
-            print(self.current_state)
-            self.states.append(self.current_state.copy())
+            self.states.append(copy.deepcopy(self.current_state))
         
         
     def draw_point(self, x, y, color):
@@ -226,16 +227,16 @@ class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         
     def add_point_in_table(self, x, y, color):
         if color == 'green':
-            self.insert_row(x, y, self.number_first_points, GREEN)
-            self.points_x1.append(x)
-            self.points_y1.append(y)
-            self.number_first_points += 1
+            self.insert_row(x, y, self.current_state['number1'], GREEN)
+            self.current_state['point_x1'].append(x)
+            self.current_state['point_y1'].append(y)
+            self.current_state['number1'] += 1
         elif color == 'red':
-            self.insert_row(x, y, self.number_second_points + self.number_first_points, RED)
-            self.points_x2.append(x)
-            self.points_y2.append(y)
-            self.number_second_points += 1
-        self.number_of_points += 1
+            self.insert_row(x, y, self.current_state['number1'] + self.current_state['number2'], RED)
+            self.current_state['point_x2'].append(x)
+            self.current_state['point_y2'].append(y)
+            self.current_state['number2'] += 1
+        self.current_state['all'] += 1
         
         
     def delete_point(self, point_x, point_y, ind, ind_in_table):
@@ -247,18 +248,20 @@ class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
     def redrawing_plot(self, i):
         self.uninit_plot()
         self.init_plot()
-        if i >= self.number_first_points:
-            self.delete_point(self.points_x2, self.points_y2, i - self.number_first_points, i)
-            self.number_second_points -= 1
-        else:
-            self.delete_point(self.points_x1, self.points_y1, i, i)
-            self.number_first_points -= 1
-        self.number_of_points -= 1
+        if i >= self.current_state['number1']:
+            self.delete_point(self.current_state['point_x2'], self.current_state['point_y2'], i - self.current_state['number1'], i)
+            self.current_state['number2'] -= 1
+            self.current_state['all'] -= 1
+        elif i >= 0:
+            self.delete_point(self.current_state['point_x1'], self.current_state['point_y1'], i, i)
+            self.current_state['number1'] -= 1
+            self.current_state['all'] -= 1
         self.draw_points(True)
         
         
     def draw_point_onclick(self, event):
         if event.button == RIGHT_BUTTON:
+            self.states.append(copy.deepcopy(self.current_state))
             sets = ('Первое множество', 'Второе множество')
             color, ok = QtWidgets.QInputDialog.getItem(self, 'В какое множество добавить точку?', 'Множества:', sets, 0, False)
             if color == 'Первое множество' and ok:
@@ -270,12 +273,14 @@ class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
             elif not ok:
                 return
             self.command_stack.append(ADD)
+            print(self.states)
         if event.button == LEFT_BUTTON:
-            set_1 = [(self.points_x1[i], self.points_y1[i]) for i in range(self.number_first_points)]
-            set_2 = [(self.points_x2[i], self.points_y2[i]) for i in range(self.number_second_points)]
+            self.states.append(copy.deepcopy(self.current_state))
+            set_1 = [(self.current_state['point_x1'][i], self.current_state['point_y1'][i]) for i in range(self.current_state['number1'])]
+            set_2 = [(self.current_state['point_x2'][i], self.current_state['point_y2'][i]) for i in range(self.current_state['number2'])]
 
             all_points = set_1 + set_2
-            for i in range(self.number_of_points):
+            for i in range(self.current_state['all']):
                 if event.xdata and event.ydata and all_points[i][0] - RAD_EPS <= event.xdata <= all_points[i][0] + RAD_EPS and all_points[i][1] - RAD_EPS <= event.ydata <= all_points[i][1]:
                     self.redrawing_plot(i)
                     self.command_stack.append(DEL)
@@ -284,6 +289,7 @@ class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
                 
         
     def delete_point_from_table(self):
+        self.states.append(copy.deepcopy(self.current_state))
         if (ind := self.tableWidget.currentRow()) != -1:
             self.redrawing_plot(ind)
         self.command_stack.append(DEL)
@@ -302,6 +308,7 @@ class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
             self.error_handling(-4)
             return
         
+        self.states.append(copy.deepcopy(self.current_state))
         x, y = map(float, point.split())
         if color == 'Первое множество':
             self.draw_point(x, y, 'go')
@@ -314,19 +321,20 @@ class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
             
             
     def delete_all(self):
+        self.states.append(copy.deepcopy(self.current_state))
         self.lineEdit.clear()
         self.clear_points()
         self.textEdit.clear()
         self.uninit_plot()
         self.init_plot()
-        self.points_x1 = []
-        self.points_y1 = []
-        self.points_x2 = []
-        self.points_y2 = []
+        self.current_state['point_x1'] = []
+        self.current_state['point_y1'] = []
+        self.current_state['point_x2'] = []
+        self.current_state['point_y2'] = []
         self.from_line_edit = False
-        self.number_of_points = 0
-        self.number_first_points = 0
-        self.number_second_points = 0
+        self.current_state['all'] = 0
+        self.current_state['number1'] = 0
+        self.current_state['number2'] = 0
         self.command_stack.append(DEL_ALL)
         
         
@@ -340,8 +348,14 @@ class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
     def cancel(self):
         last_action = self.command_stack.pop()
         last_state = self.states.pop()
-        if last_action == DEL_ALL:
-            self.undo_table(self.current_state)
+        self.current_state = copy.deepcopy(last_state)
+        if last_action == DEL_ALL or last_action == ADD or last_action == DEL:
+            self.undo_table(last_state)
+            self.redrawing_plot(-1)
+        elif last_action == DRAW:
+            self.uninit_plot()
+            self.init_plot()
+            
         
         
 def main():
