@@ -24,7 +24,14 @@ RIGHT_BUTTON = 3
 LEFT_BUTTON = 1
 GREEN = QtGui.QColor(144, 238, 144)
 RED = QtGui.QColor(240, 128, 128)
-RAD_EPS = 0.005
+RAD_EPS = 0.05
+
+ADD = 'add'
+DEL = 'del'
+DEL_ALL = 'del_all'
+DRAW = 'draw'
+TASK = 'task'
+TABLE = 'table'
 
 
 class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
@@ -40,27 +47,31 @@ class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         
         self.points_x2 = []
         self.points_y2 = []
+    
+        self.states = []
         
         self.from_line_edit = False
         
         self.figure, self.canvas, self.toolbar, self.axes = None, None, None, None
         self.init_plot()
-        #self.axes.plot([1, 2, 3, 4], [5, 6, 7, 8], '*')
         
-        #self.axes.plot(4, 56, '*')
+        self.command_stack = []
         
         #c1 = Circle((4, 5), 6, fill=False)
         #self.axes.add_patch(c1)
         
-        #self.axes.axis('equal')
-        
         self.number_of_points = 0
         self.number_first_points = 0
         self.number_second_points = 0
+        self.current_state = {'number1': self.number_first_points, 'number2': self.number_second_points, 'all': self.number_of_points, 'point_x1': self.points_x1, 'point_y1': self.points_y1, 'point_x2': self.points_x2, 'point_y2': self.points_y2, 'table': self.tableWidget}
         
         self.lineEdit.returnPressed.connect(self.create_table) # Ввод по нажатию Enter
         self.pushButton_5.clicked.connect(self.draw_points) # Привязка отрисовки точек к кнопке
         self.pushButton.clicked.connect(self.delete_point_from_table) # Удаление точки из таблицы по нажатию кнопки
+        self.pushButton_6.clicked.connect(self.add_point_in_table_from_button) # Добавление точки по нажатию кнопки
+        self.pushButton_4.clicked.connect(self.delete_all) # Стереть всё
+        self.pushButton_2.clicked.connect(self.cancel)
+        
         
         
     def init_plot(self): # График
@@ -87,6 +98,8 @@ class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
                 self.textEdit.setText("Некорректное заполнение таблицы!")
             case -3:
                 self.textEdit.setText("Точки отсутствуют!")
+            case -4:
+                self.textEdit.setText("Некорректный ввод координат!")
                 
     
     def is_correct_number(self, number, string): # Проверка числовых полей на корректность
@@ -97,10 +110,13 @@ class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         text = self.lineEdit.text().strip()
         if self.is_correct_number(text, r'\d+ \d+') == None:
             self.number_of_points = 0
+            self.current_state['all'] = 0
             self.error_handling(INP_DIGIT_ERROR)
         else:
             self.number_first_points, self.number_second_points = map(int, text.split())
+            self.current_state['number1'], self.current_state['number2'] = map(int, text.split())
             self.number_of_points = self.number_first_points + self.number_second_points
+            self.current_state['all'] = self.number_first_points + self.number_second_points
         self.lineEdit.clear() # стереть
         
     
@@ -119,6 +135,8 @@ class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.tableWidget.setColumnWidth(0, 75)
         self.tableWidget.setColumnWidth(1, 75)
         self.tableWidget.setRowCount(number)
+        
+        self.command_stack.append(TABLE)
         
         
     def clear_points(self):
@@ -174,6 +192,11 @@ class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         if self.points_x2: self.axes.plot(self.points_x2, self.points_y2, 'ro', markersize=MARKERSIZE)
         self.update_canvas()
         
+        if from_table == False: 
+            self.command_stack.append(DRAW)
+            print(self.current_state)
+            self.states.append(self.current_state.copy())
+        
         
     def draw_point(self, x, y, color):
         self.axes.plot(x, y, color, markersize=MARKERSIZE)
@@ -216,9 +239,22 @@ class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         
         
     def delete_point(self, point_x, point_y, ind, ind_in_table):
-        point_x.pop(ind)
-        point_y.pop(ind)
+        if point_x: point_x.pop(ind)
+        if point_y: point_y.pop(ind)
         self.tableWidget.removeRow(ind_in_table)
+        
+        
+    def redrawing_plot(self, i):
+        self.uninit_plot()
+        self.init_plot()
+        if i >= self.number_first_points:
+            self.delete_point(self.points_x2, self.points_y2, i - self.number_first_points, i)
+            self.number_second_points -= 1
+        else:
+            self.delete_point(self.points_x1, self.points_y1, i, i)
+            self.number_first_points -= 1
+        self.number_of_points -= 1
+        self.draw_points(True)
         
         
     def draw_point_onclick(self, event):
@@ -231,34 +267,82 @@ class MyApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
             elif color == 'Второе множество' and ok:
                 self.draw_point(event.xdata, event.ydata, 'ro')
                 self.add_point_in_table(event.xdata, event.ydata, 'red')
+            elif not ok:
+                return
+            self.command_stack.append(ADD)
         if event.button == LEFT_BUTTON:
             set_1 = [(self.points_x1[i], self.points_y1[i]) for i in range(self.number_first_points)]
             set_2 = [(self.points_x2[i], self.points_y2[i]) for i in range(self.number_second_points)]
 
             all_points = set_1 + set_2
             for i in range(self.number_of_points):
-                if all_points[i][0] - RAD_EPS <= event.xdata <= all_points[i][0] + RAD_EPS and all_points[i][1] - RAD_EPS <= event.ydata <= all_points[i][1]:
-                    self.uninit_plot()
-                    self.init_plot()
-                    if i >= self.number_first_points:
-                        self.delete_point(self.points_x2, self.points_y2, i - self.number_first_points, i)
-                        self.number_second_points -= 1
-                    else:
-                        self.delete_point(self.points_x1, self.points_y1, i, i)
-                        self.number_first_points -= 1
-                    self.number_of_points -= 1
-                    print(self.number_of_points, self.number_first_points, self.number_second_points)
-                    self.draw_points(True)
+                if event.xdata and event.ydata and all_points[i][0] - RAD_EPS <= event.xdata <= all_points[i][0] + RAD_EPS and all_points[i][1] - RAD_EPS <= event.ydata <= all_points[i][1]:
+                    self.redrawing_plot(i)
+                    self.command_stack.append(DEL)
                     break
+            
                 
         
     def delete_point_from_table(self):
         if (ind := self.tableWidget.currentRow()) != -1:
-            self.tableWidget.removeRow(ind)
+            self.redrawing_plot(ind)
+        self.command_stack.append(DEL)
             
-                        
-                    
-
+            
+    def add_point_in_table_from_button(self):
+        sets = ('Первое множество', 'Второе множество')
+        color, ok = QtWidgets.QInputDialog.getItem(self, 'В какое множество добавить точку?', 'Множества:', sets, 0, False)
+        
+        if ok:
+            point, ok = QtWidgets.QInputDialog.getText(self, 'Введите координаты добавляемой точки', 'Координаты (через пробел):')
+        else:
+            return
+        
+        if self.is_correct_number(point, r'\d+\.?\d* \d+\.?\d*') == None:
+            self.error_handling(-4)
+            return
+        
+        x, y = map(float, point.split())
+        if color == 'Первое множество':
+            self.draw_point(x, y, 'go')
+            self.add_point_in_table(x, y, 'green')
+        elif color == 'Второе множество':
+            self.draw_point(x, y, 'ro')
+            self.add_point_in_table(x, y, 'red')
+        
+        self.command_stack.append(ADD)
+            
+            
+    def delete_all(self):
+        self.lineEdit.clear()
+        self.clear_points()
+        self.textEdit.clear()
+        self.uninit_plot()
+        self.init_plot()
+        self.points_x1 = []
+        self.points_y1 = []
+        self.points_x2 = []
+        self.points_y2 = []
+        self.from_line_edit = False
+        self.number_of_points = 0
+        self.number_first_points = 0
+        self.number_second_points = 0
+        self.command_stack.append(DEL_ALL)
+        
+        
+    def undo_table(self, state):
+        for i in range(state['number1']):
+            self.insert_row(state['point_x1'][i], state['point_y1'][i], i, GREEN)
+        for i in range(state['number2']):
+            self.insert_row(state['point_x2'][i], state['point_y2'][i], i + state['number1'], RED)
+        
+        
+    def cancel(self):
+        last_action = self.command_stack.pop()
+        last_state = self.states.pop()
+        if last_action == DEL_ALL:
+            self.undo_table(self.current_state)
+        
         
 def main():
     app = QtWidgets.QApplication(sys.argv)
