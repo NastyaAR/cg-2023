@@ -95,6 +95,16 @@
             <string>Алгоритм Брезенхема (действ.)</string>
            </property>
           </item>
+          <item>
+           <property name="text">
+            <string>Алгоритм Брезенхема (с устр-ем ступенчатости)</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Алгоритм Ву</string>
+           </property>
+          </item>
          </widget>
         </item>
         <item>
