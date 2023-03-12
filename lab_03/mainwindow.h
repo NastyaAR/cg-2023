@@ -8,6 +8,7 @@
 
 #include "addline.h"
 #include "addspectre.h"
+#include "deleteall.h"
 #include "error_handler.h"
 
 #define SCALE 1.1

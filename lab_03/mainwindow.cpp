@@ -110,7 +110,11 @@ void MainWindow::on_pushButton_4_clicked() // построение отрезк�
 
 void MainWindow::on_pushButton_6_clicked()
 {
+	scene_colors.push_back(current_state.sceneColor);
+	QUndoCommand *deleteAll = new DeleteAll(current_state, scene);
+	undoStack->push(deleteAll);
 	scene->clear();
+	ui->graphicsView->setBackgroundBrush(QColor(255, 255, 255, 255));
 }
 
 static void update_color_on_label(QLabel *label, QColor color)
@@ -203,15 +207,9 @@ void MainWindow::on_pushButton_3_clicked() // построение спектр�
 void MainWindow::on_pushButton_5_clicked()
 {
 	const QUndoCommand *command = undoStack->command(undoStack->count() - 1);
-	int id = command->id();
 
-	switch (id) {
-		case 0:
-		case 1:
-			ui->graphicsView->setBackgroundBrush(scene_colors[scene_colors.size() - 1]);
-			scene_colors.pop_back();
-			break;
-	}
+	ui->graphicsView->setBackgroundBrush(scene_colors[scene_colors.size() - 1]);
+	scene_colors.pop_back();
 
 	undoStack->undo();
 }
