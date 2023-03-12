@@ -10,6 +10,8 @@ MainWindow::MainWindow(QWidget *parent)
 
 	undoStack = new QUndoStack(this);
 
+	scene_colors.push_back(QColor(255, 255, 255, 255));
+
     ui->graphicsView->setScene(scene);
     ui->graphicsView->setAlignment(Qt::AlignTop|Qt::AlignLeft); // изначально сцена в верхнем левом углу
     ui->graphicsView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -70,26 +72,34 @@ void MainWindow::on_pushButton_4_clicked() // построение отрезк�
 
 	read_line(line);
 
+	scene_colors.push_back(current_state.sceneColor);
+
 	ui->graphicsView->setBackgroundBrush(current_state.sceneColor);
 
     switch (ui->comboBox->currentIndex()) {
     case STANDART:
 		lib_algorithm(line, scene);
+		line.method = STANDART;
         break;
     case DDA:
 		dda_algorithm(line, scene);
+		line.method = DDA;
         break;
 	case BRESENHAM_REAL:
 		double_bresenham_algorithm(line, scene);
+		line.method = BRESENHAM_REAL;
 		break;
 	case BRESENHAM_INT:
 		int_bresenham_algorithm(line, scene);
+		line.method = BRESENHAM_INT;
 		break;
 	case BRESENHAM_NO_GRADATION:
-		bresenham_without_gradation(line, scene, false);
+		bresenham_without_gradation(line, scene);
+		line.method = BRESENHAM_NO_GRADATION;
 		break;
 	case WU:
-		wu_algorithm(line, scene, false);
+		wu_algorithm(line, scene);
+		line.method = WU;
 		break;
     }
 
@@ -127,7 +137,6 @@ void MainWindow::on_pushButton_clicked()
 
 void MainWindow::on_pushButton_2_clicked()
 {
-	scene_color = current_state.sceneColor;
 	current_state.sceneColor = QColorDialog::getColor();
 	update_color_on_label(ui->label_2, current_state.sceneColor);
 }
@@ -149,6 +158,12 @@ void MainWindow::on_pushButton_3_clicked() // построение спектр�
 
 	double x = line.start_x + spectre.len;
 	double y = line.start_y;
+
+	spectre.method = (Method_t) ui->comboBox->currentIndex();
+
+	scene_colors.push_back(current_state.sceneColor);
+
+	ui->graphicsView->setBackgroundBrush(current_state.sceneColor);
 
 	for (double angle = 0; angle < 360; angle += spectre.angle)
 	{
@@ -172,15 +187,17 @@ void MainWindow::on_pushButton_3_clicked() // построение спектр�
 			int_bresenham_algorithm(line, scene);
 			break;
 		case BRESENHAM_NO_GRADATION:
-			bresenham_without_gradation(line, scene, false);
+			bresenham_without_gradation(line, scene);
 			break;
 		case WU:
-			wu_algorithm(line, scene, false);
+			wu_algorithm(line, scene);
 			break;
 		}
 	}
 
 	current_state.spectres.push_back(spectre);
+	QUndoCommand *addSpectre = new AddSpectre(current_state, scene);
+	undoStack->push(addSpectre);
 }
 
 void MainWindow::on_pushButton_5_clicked()
@@ -190,7 +207,9 @@ void MainWindow::on_pushButton_5_clicked()
 
 	switch (id) {
 		case 0:
-			ui->graphicsView->setBackgroundBrush(scene_color);
+		case 1:
+			ui->graphicsView->setBackgroundBrush(scene_colors[scene_colors.size() - 1]);
+			scene_colors.pop_back();
 			break;
 	}
 

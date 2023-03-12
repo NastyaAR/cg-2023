@@ -11,6 +11,7 @@ CONFIG += c++11
 SOURCES += \
     addline.cpp \
     addspectre.cpp \
+    deleteall.cpp \
     error_handler.cpp \
     line_segment.cpp \
     main.cpp \
@@ -19,6 +20,7 @@ SOURCES += \
 HEADERS += \
     addline.h \
     addspectre.h \
+    deleteall.h \
     error_handler.h \
     line_segment.h \
     mainwindow.h

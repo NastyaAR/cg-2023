@@ -7,6 +7,7 @@
 #include <QColorDialog>
 
 #include "addline.h"
+#include "addspectre.h"
 #include "error_handler.h"
 
 #define SCALE 1.1
@@ -43,7 +44,7 @@ private:
     QGraphicsScene *scene;
     state_t current_state;
 
-	QColor scene_color = QColor(255, 255, 255, 255);
+	std::vector <QColor> scene_colors;
 
 	QUndoStack *undoStack = nullptr;
 

@@ -54,7 +54,7 @@ void lib_algorithm(const line_segment_t &line, QGraphicsScene *scene);
 void dda_algorithm(const line_segment_t &line, QGraphicsScene *scene);
 void double_bresenham_algorithm(const line_segment_t &line, QGraphicsScene *scene);
 void int_bresenham_algorithm(const line_segment_t &line, QGraphicsScene *scene);
-void bresenham_without_gradation(const line_segment_t &line, QGraphicsScene *scene, bool deleted);
-void wu_algorithm(const line_segment_t &line, QGraphicsScene *scene, bool deleted);
+void bresenham_without_gradation(const line_segment_t &line, QGraphicsScene *scene);
+void wu_algorithm(const line_segment_t &line, QGraphicsScene *scene);
 
 #endif // LINE_SEGMENT_H
