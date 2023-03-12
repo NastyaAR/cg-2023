@@ -6,6 +6,7 @@
 enum err_t
 {
 	SUCCESS,
+	FILE_OPEN_ERROR,
 };
 
 

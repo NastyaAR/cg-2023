@@ -5,6 +5,7 @@
 #include <QGraphicsScene>
 #include <QWheelEvent>
 #include <QColorDialog>
+#include <chrono>
 
 #include "addline.h"
 #include "addspectre.h"
@@ -12,6 +13,7 @@
 #include "error_handler.h"
 
 #define SCALE 1.1
+#define HOW_TIMES 100
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -40,6 +42,10 @@ private slots:
 	void on_pushButton_3_clicked();
 
 	void on_pushButton_5_clicked();
+
+	void on_pushButton_7_clicked();
+
+	void on_pushButton_8_clicked();
 
 private:
     QGraphicsScene *scene;

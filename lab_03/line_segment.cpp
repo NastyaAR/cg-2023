@@ -18,13 +18,13 @@ static void draw_pixcel(const int x, const int y, QColor color, QGraphicsScene *
     scene->addRect(x, y, 1, 1, pen, brush);
 }
 
-void lib_algorithm(const line_segment_t &line, QGraphicsScene *scene)
+void lib_algorithm(const line_segment_t &line, QGraphicsScene *scene, bool draw, int *step_number)
 {
 	QLineF line_obj = QLineF(line.start_x, line.start_y, line.finish_x, line.finish_y);
-	scene->addLine(line_obj, QPen(line.color));
+	if (draw) scene->addLine(line_obj, QPen(line.color));
 }
 
-void dda_algorithm(const line_segment_t &line, QGraphicsScene *scene)
+void dda_algorithm(const line_segment_t &line, QGraphicsScene *scene, bool draw, int *step_number)
 {
     double len;
 
@@ -39,17 +39,28 @@ void dda_algorithm(const line_segment_t &line, QGraphicsScene *scene)
     double x = line.start_x + 0.5 * sign(dx);
     double y = line.start_y + 0.5 * sign(dy);
 
+	double old_x = x;
+	double old_y = y;
+
     int i = 0;
     while (i <= len)
     {
-        draw_pixcel(round(x), round(y), line.color, scene);
+		if (draw) draw_pixcel(round(x), round(y), line.color, scene);
         x = x + dx;
         y = y + dy;
+
+		if (step_number)
+		{
+			if (round(x) != round(old_x) && round(y) != round(old_y))
+				(*step_number)++;
+			old_x = x;
+			old_y = y;
+		}
         i++;
     }
 }
 
-void double_bresenham_algorithm(const line_segment_t &line, QGraphicsScene *scene)
+void double_bresenham_algorithm(const line_segment_t &line, QGraphicsScene *scene, bool draw, int *step_number)
 {
 	double x = line.start_x;
 	double y = line.start_y;
@@ -72,10 +83,15 @@ void double_bresenham_algorithm(const line_segment_t &line, QGraphicsScene *scen
 	else
 		change = false;
 
-	double e = dy / dx - 0.5;
+	double m = dy / dx;
+
+	double old_x = x;
+	double old_y = y;
+
+	double e = m - 0.5;
 	for (int i = 1; i < dx; i++)
 	{
-		draw_pixcel(x, y, line.color, scene);
+		if (draw) draw_pixcel(x, y, line.color, scene);
 		while (e >= 0)
 		{
 			if (change)
@@ -84,15 +100,23 @@ void double_bresenham_algorithm(const line_segment_t &line, QGraphicsScene *scen
 				y += s2;
 			e--;
 		}
-		e += (dy / dx);
+		e += m;
 		if (change)
 			y += s2;
 		else
 			x += s1;
+
+		if (step_number)
+		{
+			if (round(x) != round(old_x) && round(y) != round(old_y))
+				(*step_number)++;
+			old_x = x;
+			old_y = y;
+		}
 	}
 }
 
-void int_bresenham_algorithm(const line_segment_t &line, QGraphicsScene *scene)
+void int_bresenham_algorithm(const line_segment_t &line, QGraphicsScene *scene, bool draw, int *step_number)
 {
 	double x = line.start_x;
 	double y = line.start_y;
@@ -117,9 +141,12 @@ void int_bresenham_algorithm(const line_segment_t &line, QGraphicsScene *scene)
 
 	int e = 2 * dy - dx;
 
+	double old_x = x;
+	double old_y = y;
+
 	for (int i = 1; i < dx; i++)
 	{
-		draw_pixcel(x, y, line.color, scene);
+		if (draw) draw_pixcel(x, y, line.color, scene);
 		while (e >= 0)
 		{
 			if (change)
@@ -133,6 +160,13 @@ void int_bresenham_algorithm(const line_segment_t &line, QGraphicsScene *scene)
 			y += s2;
 		else
 			x += s1;
+		if (step_number)
+		{
+			if (round(x) != round(old_x) && round(y) != round(old_y))
+				(*step_number)++;
+			old_x = x;
+			old_y = y;
+		}
 	}
 }
 
@@ -148,7 +182,7 @@ static void intensity_regulation(QColor &color, double intensity)
 	color = QColor(color.red(), color.green(), color.blue(), res);
 }
 
-void bresenham_without_gradation(const line_segment_t &line, QGraphicsScene *scene)
+void bresenham_without_gradation(const line_segment_t &line, QGraphicsScene *scene, bool draw, int *step_number)
 {
 	double x = line.start_x;
 	double y = line.start_y;
@@ -178,7 +212,10 @@ void bresenham_without_gradation(const line_segment_t &line, QGraphicsScene *sce
 	QColor new_color = line.color;
 	intensity_regulation(new_color, e);
 
-	draw_pixcel(x, y, new_color, scene);
+	double old_x = x;
+	double old_y = y;
+
+	if (draw) draw_pixcel(x, y, new_color, scene);
 
 	for (int i = 1; i < dx; i++)
 	{
@@ -198,7 +235,14 @@ void bresenham_without_gradation(const line_segment_t &line, QGraphicsScene *sce
 		}
 
 		intensity_regulation(new_color, e);
-		draw_pixcel(x, y, new_color, scene);
+		if (draw) draw_pixcel(x, y, new_color, scene);
+		if (step_number)
+		{
+			if (round(x) != round(old_x) && round(y) != round(old_y))
+				(*step_number)++;
+			old_x = x;
+			old_y = y;
+		}
 	}
 }
 
@@ -224,7 +268,7 @@ static double mround(double x)
 	return ipart(x + 0.5);
 }
 
-void wu_algorithm(const line_segment_t &line, QGraphicsScene *scene)
+void wu_algorithm(const line_segment_t &line, QGraphicsScene *scene, bool draw, int *step_number)
 {
 	QColor c1 = line.color;
 	QColor c2 = line.color;
@@ -265,13 +309,13 @@ void wu_algorithm(const line_segment_t &line, QGraphicsScene *scene)
 
 	if (! change)
 	{
-		draw_pixcel(xpxl1, ypxl1, c1, scene);
-		draw_pixcel(xpxl1, ypxl1 + 1, c2, scene);
+		if (draw) draw_pixcel(xpxl1, ypxl1, c1, scene);
+		if (draw) draw_pixcel(xpxl1, ypxl1 + 1, c2, scene);
 	}
 	else
 	{
-		draw_pixcel(ypxl1, xpxl1, c1, scene);
-		draw_pixcel(ypxl1 + 1, xpxl1, c2, scene);
+		if (draw) draw_pixcel(ypxl1, xpxl1, c1, scene);
+		if (draw) draw_pixcel(ypxl1 + 1, xpxl1, c2, scene);
 	}
 
 	double intery = yend + m;
@@ -287,13 +331,13 @@ void wu_algorithm(const line_segment_t &line, QGraphicsScene *scene)
 
 	if (! change)
 	{
-		draw_pixcel(xpxl2, ypxl2, c1, scene);
-		draw_pixcel(xpxl2, ypxl2 + 1, c2, scene);
+		if (draw) draw_pixcel(xpxl2, ypxl2, c1, scene);
+		if (draw) draw_pixcel(xpxl2, ypxl2 + 1, c2, scene);
 	}
 	else
 	{
-		draw_pixcel(ypxl2, xpxl2, c1, scene);
-		draw_pixcel(ypxl2 + 1, xpxl2, c2, scene);
+		if (draw) draw_pixcel(ypxl2, xpxl2, c1, scene);
+		if (draw) draw_pixcel(ypxl2 + 1, xpxl2, c2, scene);
 	}
 
 	for (int xi = xpxl1 + 1; xi < xpxl2; xi++)
@@ -303,14 +347,18 @@ void wu_algorithm(const line_segment_t &line, QGraphicsScene *scene)
 
 		if (! change)
 		{
-			draw_pixcel(xi, ipart(intery), c1, scene);
-			draw_pixcel(xi, ipart(intery) + 1, c2, scene);
+			if (draw) draw_pixcel(xi, ipart(intery), c1, scene);
+			if (draw) draw_pixcel(xi, ipart(intery) + 1, c2, scene);
 		}
 		else
 		{
-			draw_pixcel(ipart(intery), xi, c1, scene);
-			draw_pixcel(ipart(intery) + 1, xi, c2, scene);
+			if (draw) draw_pixcel(ipart(intery), xi, c1, scene);
+			if (draw) draw_pixcel(ipart(intery) + 1, xi, c2, scene);
 		}
+
+		if (step_number && xi < xpxl2)
+			if (ipart(intery) != ipart(intery + m))
+				(*step_number)++;
 
 		intery += m;
 	}

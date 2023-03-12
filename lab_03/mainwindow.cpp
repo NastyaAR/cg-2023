@@ -214,3 +214,111 @@ void MainWindow::on_pushButton_5_clicked()
 	undoStack->undo();
 }
 
+
+static double get_avg_time(spectre_t &spectre, QGraphicsScene *scene, void (*algorithm) (const line_segment_t &line, QGraphicsScene *scene, bool draw, int *step_number))
+{
+	line_segment_t line;
+	line.color = spectre.color;
+	line.start_x = spectre.center_x;
+	line.start_y = spectre.center_y;
+
+	double x = line.start_x + spectre.len;
+	double y = line.start_y;
+
+	double sum = 0;
+	for (int i = 0; i < HOW_TIMES; i++)
+	{
+		auto begin = std::chrono::high_resolution_clock::now();
+		for (double angle = 0; angle < 360; angle += spectre.angle)
+		{
+			x = spectre.len * cos(to_radians(angle)) + line.start_x;
+			y = spectre.len * sin(to_radians(angle)) + line.start_y;
+
+			line.finish_x = x;
+			line.finish_y = y;
+
+			algorithm(line, scene, false, NULL);
+		}
+		auto end = std::chrono::high_resolution_clock::now();
+		double elapsed_ms = (double) std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+
+		sum += elapsed_ms;
+
+	}
+	return sum / HOW_TIMES;
+}
+
+
+void MainWindow::on_pushButton_7_clicked()
+{
+	FILE *file = fopen("time.txt", "w");
+	if (! file)
+	{
+		handle_error(FILE_OPEN_ERROR);
+		return;
+	}
+
+	spectre_t spectre = {0, 0, 10, 1000, STANDART, QColor(0, 0, 0, 255)};
+
+	fprintf(file, "%lf ", get_avg_time(spectre, scene, lib_algorithm));
+	fprintf(file, "%lf ", get_avg_time(spectre, scene, dda_algorithm));
+	fprintf(file, "%lf ", get_avg_time(spectre, scene, double_bresenham_algorithm));
+	fprintf(file,"%lf ", get_avg_time(spectre, scene, int_bresenham_algorithm));
+	fprintf(file, "%lf ", get_avg_time(spectre, scene, bresenham_without_gradation));
+	fprintf(file, "%lf", get_avg_time(spectre, scene, wu_algorithm));
+
+	fclose(file);
+
+	std::system("python3 /home/nastya/sem4/cg-2023/lab_03/graph_time.py");
+}
+
+static void get_step_number(spectre_t &spectre, QGraphicsScene *scene, void (*algorithm) (const line_segment_t &line, QGraphicsScene *scene, bool draw, int *step_number), FILE *file)
+{
+	line_segment_t line;
+	line.color = spectre.color;
+	line.start_x = spectre.center_x;
+	line.start_y = spectre.center_y;
+
+	double x = line.start_x + spectre.len;
+	double y = line.start_y;
+
+	int step_number = 0;
+
+	for (double angle = 0; angle <= 90; angle += spectre.angle)
+	{
+		x = spectre.len * cos(to_radians(angle)) + line.start_x;
+		y = spectre.len * sin(to_radians(angle)) + line.start_y;
+
+		line.finish_x = x;
+		line.finish_y = y;
+
+		algorithm(line, scene, false, &step_number);
+
+		fprintf(file, "%d ", step_number);
+	}
+}
+
+void MainWindow::on_pushButton_8_clicked()
+{
+	FILE *file = fopen("gradation.txt", "w");
+	if (! file)
+	{
+		handle_error(FILE_OPEN_ERROR);
+		return;
+	}
+
+	spectre_t spectre = {0, 0, 1, 1000, STANDART, QColor(0, 0, 0, 255)};
+
+	get_step_number(spectre, scene, dda_algorithm, file);
+	fprintf(file, "\n");
+	get_step_number(spectre, scene, double_bresenham_algorithm, file);
+	fprintf(file, "\n");
+	get_step_number(spectre, scene, int_bresenham_algorithm, file);
+	fprintf(file, "\n");
+	get_step_number(spectre, scene, bresenham_without_gradation, file);
+	fprintf(file, "\n");
+	get_step_number(spectre, scene, wu_algorithm, file);
+
+	fclose(file);
+}
+

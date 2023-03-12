@@ -50,11 +50,11 @@ struct state
 
 using state_t = struct state;
 
-void lib_algorithm(const line_segment_t &line, QGraphicsScene *scene);
-void dda_algorithm(const line_segment_t &line, QGraphicsScene *scene);
-void double_bresenham_algorithm(const line_segment_t &line, QGraphicsScene *scene);
-void int_bresenham_algorithm(const line_segment_t &line, QGraphicsScene *scene);
-void bresenham_without_gradation(const line_segment_t &line, QGraphicsScene *scene);
-void wu_algorithm(const line_segment_t &line, QGraphicsScene *scene);
+void lib_algorithm(const line_segment_t &line, QGraphicsScene *scene, bool draw=true, int *step_number=NULL);
+void dda_algorithm(const line_segment_t &line, QGraphicsScene *scene, bool draw=true, int *step_number=NULL);
+void double_bresenham_algorithm(const line_segment_t &line, QGraphicsScene *scene, bool draw=true, int *step_number=NULL);
+void int_bresenham_algorithm(const line_segment_t &line, QGraphicsScene *scene, bool draw=true, int *step_number=NULL);
+void bresenham_without_gradation(const line_segment_t &line, QGraphicsScene *scene, bool draw=true, int *step_number=NULL);
+void wu_algorithm(const line_segment_t &line, QGraphicsScene *scene, bool draw=true, int *step_number=NULL);
 
 #endif // LINE_SEGMENT_H
