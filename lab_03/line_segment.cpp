@@ -148,7 +148,7 @@ static void intensity_regulation(QColor &color, double intensity)
 	color = QColor(color.red(), color.green(), color.blue(), res);
 }
 
-void bresenham_without_gradation(const line_segment_t &line, QGraphicsScene *scene)
+void bresenham_without_gradation(const line_segment_t &line, QGraphicsScene *scene, bool deleted)
 {
 	double x = line.start_x;
 	double y = line.start_y;
@@ -176,7 +176,7 @@ void bresenham_without_gradation(const line_segment_t &line, QGraphicsScene *sce
 	double e = 0.5;
 	double w = 1 - m;
 	QColor new_color = line.color;
-	intensity_regulation(new_color, e);
+	if (! deleted) intensity_regulation(new_color, e);
 
 	draw_pixcel(x, y, new_color, scene);
 
@@ -197,7 +197,7 @@ void bresenham_without_gradation(const line_segment_t &line, QGraphicsScene *sce
 			e -= w;
 		}
 
-		intensity_regulation(new_color, e);
+		if (! deleted) intensity_regulation(new_color, e);
 		draw_pixcel(x, y, new_color, scene);
 	}
 }
@@ -224,7 +224,7 @@ static double mround(double x)
 	return ipart(x + 0.5);
 }
 
-void wu_algorithm(const line_segment_t &line, QGraphicsScene *scene)
+void wu_algorithm(const line_segment_t &line, QGraphicsScene *scene, bool deleted)
 {
 	QColor c1 = line.color;
 	QColor c2 = line.color;
@@ -260,8 +260,8 @@ void wu_algorithm(const line_segment_t &line, QGraphicsScene *scene)
 	int xpxl1 = xend;
 	int ypxl1 = ipart(yend);
 
-	intensity_regulation(c1, 1 - fpart(yend) * xgap);
-	intensity_regulation(c2, fpart(yend) * xgap);
+	if (! deleted) intensity_regulation(c1, 1 - fpart(yend) * xgap);
+	if (! deleted) intensity_regulation(c2, fpart(yend) * xgap);
 
 	if (! change)
 	{
@@ -282,8 +282,8 @@ void wu_algorithm(const line_segment_t &line, QGraphicsScene *scene)
 	int xpxl2 = xend;
 	int ypxl2 = ipart(yend);
 
-	intensity_regulation(c1, 1 - fpart(yend) * xgap);
-	intensity_regulation(c2, fpart(yend) * xgap);
+	if (! deleted) intensity_regulation(c1, 1 - fpart(yend) * xgap);
+	if (! deleted) intensity_regulation(c2, fpart(yend) * xgap);
 
 	if (! change)
 	{
@@ -298,8 +298,8 @@ void wu_algorithm(const line_segment_t &line, QGraphicsScene *scene)
 
 	for (int xi = xpxl1 + 1; xi < xpxl2; xi++)
 	{
-		intensity_regulation(c1, 1 - fpart(intery) * xgap);
-		intensity_regulation(c2, fpart(intery) * xgap);
+		if (! deleted) intensity_regulation(c1, 1 - fpart(intery) * xgap);
+		if (! deleted) intensity_regulation(c2, fpart(intery) * xgap);
 
 		if (! change)
 		{

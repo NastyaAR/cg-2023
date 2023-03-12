@@ -6,12 +6,23 @@
 #include <vector>
 #include <math.h>
 
+enum Method_t
+{
+	STANDART,
+	DDA,
+	BRESENHAM_INT,
+	BRESENHAM_REAL,
+	BRESENHAM_NO_GRADATION,
+	WU,
+};
+
 struct line_segment
 {
     double start_x;
     double start_y;
     double finish_x;
     double finish_y;
+	Method_t method;
     QColor color;
 };
 
@@ -23,6 +34,7 @@ struct spectre
     double center_y;
     double angle;
     double len;
+	Method_t method;
     QColor color;
 };
 
@@ -42,7 +54,7 @@ void lib_algorithm(const line_segment_t &line, QGraphicsScene *scene);
 void dda_algorithm(const line_segment_t &line, QGraphicsScene *scene);
 void double_bresenham_algorithm(const line_segment_t &line, QGraphicsScene *scene);
 void int_bresenham_algorithm(const line_segment_t &line, QGraphicsScene *scene);
-void bresenham_without_gradation(const line_segment_t &line, QGraphicsScene *scene);
-void wu_algorithm(const line_segment_t &line, QGraphicsScene *scene);
+void bresenham_without_gradation(const line_segment_t &line, QGraphicsScene *scene, bool deleted);
+void wu_algorithm(const line_segment_t &line, QGraphicsScene *scene, bool deleted);
 
 #endif // LINE_SEGMENT_H

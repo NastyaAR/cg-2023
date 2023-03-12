@@ -5,23 +5,11 @@
 #include <QGraphicsScene>
 #include <QWheelEvent>
 #include <QColorDialog>
-#include <QUndoCommand>
-#include <QUndoStack>
 
-#include "line_segment.h"
+#include "addline.h"
 #include "error_handler.h"
 
 #define SCALE 1.1
-
-enum Method_t
-{
-    STANDART,
-    DDA,
-    BRESENHAM_INT,
-    BRESENHAM_REAL,
-	BRESENHAM_NO_GRADATION,
-	WU,
-};
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -37,7 +25,7 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_pushButton_4_clicked();
+	void on_pushButton_4_clicked();
     void read_line(line_segment_t &line);
 	void read_spectre(spectre_t &spectre);
 
@@ -49,9 +37,13 @@ private slots:
 
 	void on_pushButton_3_clicked();
 
+	void on_pushButton_5_clicked();
+
 private:
     QGraphicsScene *scene;
     state_t current_state;
+
+	QColor scene_color = QColor(255, 255, 255, 255);
 
 	QUndoStack *undoStack = nullptr;
 
