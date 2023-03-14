@@ -118,20 +118,22 @@ void double_bresenham_algorithm(const line_segment_t &line, QGraphicsScene *scen
 
 void int_bresenham_algorithm(const line_segment_t &line, QGraphicsScene *scene, bool draw, int *step_number)
 {
-	double x = line.start_x;
-	double y = line.start_y;
+	int x = round(line.start_x);
+	int xn = round(line.finish_x);
+	int y = round(line.start_y);
+	int yn = round(line.finish_y);
 
-	double dx = fabs(line.finish_x - line.start_x);
-	double dy = fabs(line.finish_y - line.start_y);
+	int dx = abs(xn - x);
+	int dy = abs(yn - y);
 
-	int s1 = sign(line.finish_x - line.start_x);
-	int s2 = sign(line.finish_y - line.start_y);
+	int s1 = sign(xn - x);
+	int s2 = sign(yn - y);
 
 	bool change = false;
 
 	if (dy > dx)
 	{
-		double t = dx;
+		int t = dx;
 		dx = dy;
 		dy = t;
 		change = true;
@@ -141,8 +143,8 @@ void int_bresenham_algorithm(const line_segment_t &line, QGraphicsScene *scene, 
 
 	int e = 2 * dy - dx;
 
-	double old_x = x;
-	double old_y = y;
+	int old_x = x;
+	int old_y = y;
 
 	for (int i = 1; i < dx; i++)
 	{
@@ -238,7 +240,7 @@ void bresenham_without_gradation(const line_segment_t &line, QGraphicsScene *sce
 		if (draw) draw_pixcel(x, y, new_color, scene);
 		if (step_number)
 		{
-			if (round(x) != round(old_x) && round(y) != round(old_y))
+			if (x != old_x && y != old_y)
 				(*step_number)++;
 			old_x = x;
 			old_y = y;

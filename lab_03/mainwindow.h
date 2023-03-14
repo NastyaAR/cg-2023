@@ -30,8 +30,8 @@ public:
 
 private slots:
 	void on_pushButton_4_clicked();
-    void read_line(line_segment_t &line);
-	void read_spectre(spectre_t &spectre);
+	err_t read_line(line_segment_t &line);
+	err_t read_spectre(spectre_t &spectre);
 
 	void on_pushButton_6_clicked();
 
@@ -46,6 +46,10 @@ private slots:
 	void on_pushButton_7_clicked();
 
 	void on_pushButton_8_clicked();
+
+	void about();
+
+	void about_me();
 
 private:
     QGraphicsScene *scene;

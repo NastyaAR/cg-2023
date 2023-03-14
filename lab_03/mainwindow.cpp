@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <iostream>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -24,6 +25,11 @@ MainWindow::MainWindow(QWidget *parent)
 	current_state.sceneColor = QColor(255, 255, 255, 255);
     ui->label->setStyleSheet("background-color: black");
     ui->label_2->setStyleSheet("background-color: white");
+
+	QAction *about_act = ui->menubar->addAction("О программе");
+	connect(about_act, SIGNAL(triggered()), this, SLOT(about()));
+	QAction *about_me_act = ui->menubar->addAction("Об авторе");
+	connect(about_me_act, SIGNAL(triggered()), this, SLOT(about_me()));
 }
 
 MainWindow::~MainWindow()
@@ -31,6 +37,16 @@ MainWindow::~MainWindow()
     delete ui;
     delete scene;
 	delete undoStack;
+}
+
+void MainWindow::about()
+{
+	QMessageBox::information(this, "О программе", "Программа позволяет рисовать отрезки/спектры отрезков различными алгоритмами.\nРеализована возможность сравнения алгоритмов по времени и ступенчатости.");
+}
+
+void MainWindow::about_me()
+{
+	QMessageBox::information(this, "Об авторе", "Алькина Анастасия ИУ7-44Б МГТУ им. Н.Э.Баумана");
 }
 
 void MainWindow::wheelEvent(QWheelEvent *event)
@@ -42,7 +58,7 @@ void MainWindow::wheelEvent(QWheelEvent *event)
 		ui->graphicsView->scale(1 / SCALE, 1 / SCALE);
 }
 
-void MainWindow::read_line(line_segment_t &line) // добавить проверки
+err_t MainWindow::read_line(line_segment_t &line) // добавить проверки
 {
     bool ok1, ok2, ok3, ok4;
 
@@ -51,10 +67,18 @@ void MainWindow::read_line(line_segment_t &line) // добавить прове�
     line.finish_x = ui->lineEdit_3->text().toDouble(&ok3);
     line.finish_y = ui->lineEdit_4->text().toDouble(&ok4);
 
+	if (!ok1 || !ok2 || !ok3 || !ok4)
+		return INCORRECT_LINE;
+
+	if (line.start_x == line.finish_x && line.start_y == line.finish_y)
+		return MATCHING_POINTS_ERR;
+
 	line.color = current_state.line_color;
+
+	return SUCCESS;
 }
 
-void MainWindow::read_spectre(spectre_t &spectre) // тут тоже
+err_t MainWindow::read_spectre(spectre_t &spectre) // тут тоже
 {
 	bool ok1, ok2, ok3, ok4;
 
@@ -63,14 +87,24 @@ void MainWindow::read_spectre(spectre_t &spectre) // тут тоже
 	spectre.len = ui->lineEdit_7->text().toDouble(&ok3);
 	spectre.angle = ui->lineEdit_8->text().toDouble(&ok4);
 
+	if (!ok1 || !ok2 || !ok3 || !ok4 || spectre.len == 0 || spectre.angle == 0)
+		return INCORRECT_SPECTRE;
+
 	spectre.color = current_state.line_color;
+
+	return SUCCESS;
 }
 
 void MainWindow::on_pushButton_4_clicked() // построение отрезка
 {
     line_segment_t line;
+	err_t rc = SUCCESS;
 
-	read_line(line);
+	if ((rc = read_line(line)) != 0)
+	{
+		handle_error(rc);
+		return;
+	}
 
 	scene_colors.push_back(current_state.sceneColor);
 
@@ -154,8 +188,14 @@ void MainWindow::on_pushButton_3_clicked() // построение спектр�
 {
 	line_segment_t line;
 	spectre_t spectre;
+	err_t rc = SUCCESS;
 
-	read_spectre(spectre);
+	if ((rc = read_spectre(spectre)) != 0)
+	{
+		handle_error(rc);
+		return;
+	}
+
 	line.color = current_state.line_color;
 	line.start_x = spectre.center_x;
 	line.start_y = spectre.center_y;
@@ -225,10 +265,14 @@ static double get_avg_time(spectre_t &spectre, QGraphicsScene *scene, void (*alg
 	double x = line.start_x + spectre.len;
 	double y = line.start_y;
 
+	auto begin = std::chrono::high_resolution_clock::now();
+	auto end = std::chrono::high_resolution_clock::now();
+	double elapsed_ms = 0;
+
 	double sum = 0;
 	for (int i = 0; i < HOW_TIMES; i++)
 	{
-		auto begin = std::chrono::high_resolution_clock::now();
+		begin = std::chrono::high_resolution_clock::now();
 		for (double angle = 0; angle < 360; angle += spectre.angle)
 		{
 			x = spectre.len * cos(to_radians(angle)) + line.start_x;
@@ -239,12 +283,11 @@ static double get_avg_time(spectre_t &spectre, QGraphicsScene *scene, void (*alg
 
 			algorithm(line, scene, false, NULL);
 		}
-		auto end = std::chrono::high_resolution_clock::now();
-		double elapsed_ms = (double) std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-
+		end = std::chrono::high_resolution_clock::now();
+		elapsed_ms = (double) std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 		sum += elapsed_ms;
-
 	}
+
 	return sum / HOW_TIMES;
 }
 
@@ -295,6 +338,7 @@ static void get_step_number(spectre_t &spectre, QGraphicsScene *scene, void (*al
 		algorithm(line, scene, false, &step_number);
 
 		fprintf(file, "%d ", step_number);
+		step_number = 0;
 	}
 }
 
@@ -320,5 +364,7 @@ void MainWindow::on_pushButton_8_clicked()
 	get_step_number(spectre, scene, wu_algorithm, file);
 
 	fclose(file);
+
+	std::system("python3 /home/nastya/sem4/cg-2023/lab_03/steps.py");
 }
 
