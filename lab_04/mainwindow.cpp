@@ -73,5 +73,12 @@ void MainWindow::on_pushButton_3_clicked()
 {
 	circle_t circle;
 
+	read_circle(circle);
+
+	switch (ui->comboBox->currentIndex()) {
+	case STANDART:
+		lib_algorithm(circle, scene);
+		break;
+	}
 }
 

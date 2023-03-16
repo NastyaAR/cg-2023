@@ -3,7 +3,16 @@
 
 #include <QColor>
 #include <QGraphicsScene>
+#include <QPen>
 
+enum method_t
+{
+	CANONICAL,
+	PARAMETRIC,
+	STANDART,
+	BRESENHAM,
+	MIDDLE_POINT,
+};
 
 struct circle
 {
@@ -36,6 +45,7 @@ struct state
 
 using state_t = struct state;
 
+void lib_algorithm(const circle_t &circle, QGraphicsScene *scene, bool draw=true);
 void bresenham_circle(const circle_t &circle, QGraphicsScene *scene, bool draw=true);
 
 #endif // ALGORITHMS_H

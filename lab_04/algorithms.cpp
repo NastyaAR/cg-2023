@@ -16,6 +16,12 @@ static void draw_pixcels(const int x, const int y, const int x0, const int y0, Q
 	draw_pixcel(x0 - x, y0 - y, color, scene);
 }
 
+void lib_algorithm(const circle_t &circle, QGraphicsScene *scene, bool draw)
+{
+	QRectF c = QRectF(circle.centerX - circle.r, circle.centerY + circle.r, circle.r * 2, circle.r * 2);
+	if (draw) scene->addEllipse(c, QPen(circle.color), QBrush(QColor(0, 0, 0, 0)));
+}
+
 void bresenham_circle(const circle_t &circle, QGraphicsScene *scene, bool draw)
 {
 	double x = 0;
@@ -25,7 +31,7 @@ void bresenham_circle(const circle_t &circle, QGraphicsScene *scene, bool draw)
 	double err = 0;
 
 	do {
-		draw_pixcels(x, y, circle.centerX, circle.centerY, circle.color, scene);
+		if (draw) draw_pixcels(x, y, circle.centerX, circle.centerY, circle.color, scene);
 
 		if (delta < 0)
 		{
