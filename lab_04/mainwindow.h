@@ -7,6 +7,7 @@
 #include <QColorDialog>
 #include <QUndoStack>
 #include <QMessageBox>
+#include <QTimer>
 #include <chrono>
 
 #include "algorithms.h"
@@ -31,6 +32,9 @@ private slots:
 	void about();
 	void about_me();
 	void read_circle(circle_t &circle);
+	void read_ellipse(ellipse_t &ellipse);
+
+	void on_pushButton_6_clicked();
 
 private:
 	QGraphicsScene *scene;

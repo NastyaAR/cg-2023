@@ -3,17 +3,30 @@
 static void draw_pixcel(const int x, const int y, QColor color, QGraphicsScene *scene)
 {
 	QPen pen = QPen(color);
+	pen.setJoinStyle(Qt::MiterJoin); // не съедаются углы у пикселей
 	QBrush brush = QBrush(color);
 
 	scene->addRect(x, y, 1, 1, pen, brush);
 }
 
-static void draw_pixcels(const int x, const int y, const int x0, const int y0, QColor color, QGraphicsScene *scene)
+static void draw_pixcels_quarter(const int x, const int y, const int x0, const int y0, QColor color, QGraphicsScene *scene)
 {
 	draw_pixcel(x + x0, y + y0, color, scene);
-	draw_pixcel(x0 - x, y + y0, color, scene);
-	draw_pixcel(x + x0, y0 - y, color, scene);
-	draw_pixcel(x0 - x, y0 - y, color, scene);
+	draw_pixcel(y + x0, x + y0, color, scene);
+	draw_pixcel(-y + x0, x + y0, color, scene);
+	draw_pixcel(-x + x0, y + y0, color, scene);
+	draw_pixcel(-x + x0, -y + y0, color, scene);
+	draw_pixcel(-y + x0, -x + y0, color, scene);
+	draw_pixcel(y + x0, -x + y0, color, scene);
+	draw_pixcel(x + x0, -y + y0, color, scene);
+}
+
+static void draw_pixcels_half(const int x, const int y, const int x0, const int y0, QColor color, QGraphicsScene *scene)
+{
+	draw_pixcel(x + x0, y + y0, color, scene);
+	draw_pixcel(-x + x0, y + y0, color, scene);
+	draw_pixcel(-x + x0, -y + y0, color, scene);
+	draw_pixcel(x + x0, -y + y0, color, scene);
 }
 
 void lib_algorithm(const circle_t &circle, QGraphicsScene *scene, bool draw)
@@ -22,16 +35,115 @@ void lib_algorithm(const circle_t &circle, QGraphicsScene *scene, bool draw)
 	if (draw) scene->addEllipse(c, QPen(circle.color), QBrush(QColor(0, 0, 0, 0)));
 }
 
-void bresenham_circle(const circle_t &circle, QGraphicsScene *scene, bool draw)
+void lib_algorithm(const ellipse_t &ellipse, QGraphicsScene *scene, bool draw)
+{
+	QRectF el = QRectF(ellipse.centerX, ellipse.centerY, ellipse.a * 2, ellipse.b * 2);
+	if (draw) scene->addEllipse(el, QPen(ellipse.color), QBrush(QColor(0, 0, 0, 0)));
+}
+
+void canonical_algorithm(const circle_t &circle, QGraphicsScene *scene, bool draw)
 {
 	double x = 0;
-	double y = circle.r;
-
-	double delta = 2 * (1 - circle.r);
-	double err = 0;
+	double y = 0;
+	double r = circle.r;
+	double rd = r * r;
+	double rsq = r * sqrt(2) / 2;
 
 	do {
-		if (draw) draw_pixcels(x, y, circle.centerX, circle.centerY, circle.color, scene);
+		y = sqrt(rd - x * x);
+		if (draw) draw_pixcels_quarter(x, y, circle.centerX, circle.centerY, circle.color, scene);
+		x += 1;
+	}
+	while (x < rsq);
+}
+
+void canonical_algorithm(const ellipse_t &ellipse, QGraphicsScene *scene, bool draw)
+{
+	double x = 0;
+	double y = 0;
+
+	double a = ellipse.a;
+	double b = ellipse.b;
+	double db = b * b;
+	double da = a * a;
+
+	double asq = a * sqrt(2) / 2;
+	double bsq = b * sqrt(2) / 2;
+
+	do {
+		y = sqrt(db - x * x * db / da);
+		if (draw) draw_pixcels_half(x, y, ellipse.centerX, ellipse.centerY, ellipse.color, scene);
+		x += 1;
+	}
+	while (x < asq);
+
+	y = 0;
+	do {
+		x = sqrt(da - y * y * da / db);
+		if (draw) draw_pixcels_half(x, y, ellipse.centerX, ellipse.centerY, ellipse.color, scene);
+		y += 1;
+	}
+	while (y < bsq);
+}
+
+void parametric_algorithm(const circle_t &circle, QGraphicsScene *scene, bool draw)
+{
+	double angle = 0;
+	double x = circle.r;
+	double y = 0;
+	double r = circle.r;
+
+	double inc = 1 / r;
+	angle += inc;
+
+	if (draw) draw_pixcels_quarter(x, y, circle.centerX, circle.centerY, circle.color, scene);
+
+	while (angle < M_PI_4)
+	{
+		x = r * cos(angle);
+		y = r * sin(angle);
+		angle += inc;
+
+		if (draw) draw_pixcels_quarter(x, y, circle.centerX, circle.centerY, circle.color, scene);
+	}
+}
+
+void parametric_algorithm(const ellipse_t &ellipse, QGraphicsScene *scene, bool draw)
+{
+	double angle = 0;
+	double x = ellipse.a;
+	double y = 0;
+
+	double a = ellipse.a;
+	double b = ellipse.b;
+
+	double inc = a > b ? 1 / a : 1 / b;
+	angle += inc;
+
+	if (draw) draw_pixcels_half(x, y, ellipse.centerX, ellipse.centerY, ellipse.color, scene);
+
+	while (angle < M_PI_2)
+	{
+		x = a * cos(angle);
+		y = b * sin(angle);
+		angle += inc;
+
+		if (draw) draw_pixcels_half(x, y, ellipse.centerX, ellipse.centerY, ellipse.color, scene);
+	}
+}
+
+void bresenham_circle(const circle_t &circle, QGraphicsScene *scene, bool draw)
+{
+	int x = 0;
+	int y = round(circle.r);
+
+	int delta = 2 * (1 - circle.r);
+	int err = 0;
+
+	int sy = round(y * sqrt(2) / 2);
+
+	do {
+		if (draw) draw_pixcels_quarter(x, y, circle.centerX, circle.centerY, circle.color, scene);
 
 		if (delta < 0)
 		{
@@ -71,7 +183,51 @@ void bresenham_circle(const circle_t &circle, QGraphicsScene *scene, bool draw)
 		}
 		continue;
 	}
-	while (y > 0);
+	while (y >= sy);
 }
 
+void bresenham_ellipse(const ellipse_t &ellipse, QGraphicsScene *scene, bool draw)
+{
+	int x = 0;
+	int y = round(ellipse.b);
+
+	int sa = round(ellipse.a * ellipse.a);
+	int sb = round(ellipse.b * ellipse.b);
+
+	int delta = 4 * (x + 1) * (x + 1) * sb + sa * (2 * y - 1) * (2 * y - 1) - 4 * sa * sb;
+
+	while (sa * (2 * y - 1) > 2 * sb * (x + 1))
+	{
+		if (draw) draw_pixcels_half(x, y, ellipse.centerX, ellipse.centerY, ellipse.color, scene);
+		if (delta < 0) // горизонтальный шаг
+		{
+			x++;
+			delta += 4 * sb * (2 * x + 3);
+		}
+		else // диаг шаг
+		{
+			x++;
+			delta = delta - 8 * sa * (y - 1) + 4 * sb * (2 * x + 3);
+			y--;
+		}
+	}
+
+	delta = sb * ((2 * x + 1) * (2 * x + 1)) + 4 * sa * (y + 1) * (y + 1) - 4 * sa * sb;
+	while (y + 1 != 0)
+	{
+		if (draw) draw_pixcels_half(x, y, ellipse.centerX, ellipse.centerY, ellipse.color, scene);
+		if (delta < 0) // вертикаль
+		{
+			y--;
+			delta += 4 * sa * (2 * y + 3);
+
+		}
+		else //диаг
+		{
+			y--;
+			delta = delta - 8 * sb * (x + 1) + 4 * sa * (2 * y + 3);
+			x++;
+		}
+	}
+}
 

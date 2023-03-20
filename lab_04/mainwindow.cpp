@@ -13,12 +13,12 @@ MainWindow::MainWindow(QWidget *parent)
 
 	scene_colors.push_back(QColor(255, 255, 255, 255));
 
-	ui->graphicsView->setScene(scene);
 	ui->graphicsView->setAlignment(Qt::AlignTop|Qt::AlignLeft); // изначально сцена в верхнем левом углу
 	ui->graphicsView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	ui->graphicsView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	ui->graphicsView->setDragMode(QGraphicsView::ScrollHandDrag); // перетаскивание сцены по лкм
-	ui->graphicsView->setRenderHint(QPainter::Antialiasing, false); // отключение сглаживания
+	//ui->graphicsView->setRenderHint(QPainter::Antialiasing); // отключение сглаживания
+	ui->graphicsView->setScene(scene);
 
 	ui->graphicsView->viewport()->installEventFilter(this); // всё, что происходит в qgraphicsview отправляется в обработчик EventFilter
 
@@ -69,16 +69,65 @@ void MainWindow::read_circle(circle_t &circle) // проверки
 	circle.color = current_state.cur_color;
 }
 
+void MainWindow::read_ellipse(ellipse_t &ellipse) // проверки
+{
+	bool ok1, ok2, ok3, ok4;
+
+	ellipse.centerX = ui->lineEdit->text().toDouble(&ok1);
+	ellipse.centerY = ui->lineEdit_2->text().toDouble(&ok2);
+	ellipse.a = ui->lineEdit_4->text().toDouble(&ok3);
+	ellipse.b = ui->lineEdit_5->text().toDouble(&ok4);
+
+	ellipse.color = current_state.cur_color;
+}
+
 void MainWindow::on_pushButton_3_clicked()
 {
 	circle_t circle;
+	ellipse_t ellipse;
 
-	read_circle(circle);
-
-	switch (ui->comboBox->currentIndex()) {
-	case STANDART:
-		lib_algorithm(circle, scene);
-		break;
+	if (ui->comboBox_2->currentIndex() == 0)
+	{
+		read_circle(circle);
+		switch (ui->comboBox->currentIndex()) {
+		case STANDART:
+			lib_algorithm(circle, scene);
+			break;
+		case CANONICAL:
+			canonical_algorithm(circle, scene);
+			break;
+		case PARAMETRIC:
+			parametric_algorithm(circle, scene);
+			break;
+		case BRESENHAM:
+			bresenham_circle(circle, scene);
+			break;
+		}
 	}
+	else
+	{
+		read_ellipse(ellipse);
+
+		switch (ui->comboBox->currentIndex()) {
+		case STANDART:
+			lib_algorithm(ellipse, scene);
+			break;
+		case CANONICAL:
+			canonical_algorithm(ellipse, scene);
+			break;
+		case PARAMETRIC:
+			parametric_algorithm(ellipse, scene);
+			break;
+		case BRESENHAM:
+			bresenham_ellipse(ellipse, scene);
+			break;
+		}
+	}
+}
+
+
+void MainWindow::on_pushButton_6_clicked()
+{
+	scene->clear();
 }
 

@@ -4,6 +4,7 @@
 #include <QColor>
 #include <QGraphicsScene>
 #include <QPen>
+#include <math.h>
 
 enum method_t
 {
@@ -46,6 +47,12 @@ struct state
 using state_t = struct state;
 
 void lib_algorithm(const circle_t &circle, QGraphicsScene *scene, bool draw=true);
+void lib_algorithm(const ellipse_t &ellipse, QGraphicsScene *scene, bool draw=true);
+void canonical_algorithm(const circle_t &circle, QGraphicsScene *scene, bool draw=true);
+void canonical_algorithm(const ellipse_t &ellipse, QGraphicsScene *scene, bool draw=true);
+void parametric_algorithm(const circle_t &circle, QGraphicsScene *scene, bool draw=true);
+void parametric_algorithm(const ellipse_t &ellipse, QGraphicsScene *scene, bool draw=true);
 void bresenham_circle(const circle_t &circle, QGraphicsScene *scene, bool draw=true);
+void bresenham_ellipse(const ellipse_t &ellipse, QGraphicsScene *scene, bool draw=true);
 
 #endif // ALGORITHMS_H
