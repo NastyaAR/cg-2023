@@ -36,11 +36,73 @@ struct ellipse
 
 using ellipse_t = struct ellipse;
 
+struct circle_spectre
+{
+	double centerX;
+	double centerY;
+	double beginR;
+	method_t method;
+	int variant;
+	QColor color;
+
+	union {
+		struct
+		{
+			double endR;
+			double step;
+		} first;
+
+		struct
+		{
+			double endR;
+			int number;
+		} second;
+
+		struct
+		{
+			double step;
+			int number;
+		} third;
+	} variable;
+};
+
+using circle_spectre_t = struct circle_spectre;
+
+struct ellipse_spectre
+{
+	double centerX;
+	double centerY;
+	double beginA;
+	double beginB;
+	method_t method;
+	int variant;
+	QColor color;
+
+	union {
+		struct {
+			double endA;
+			double step;
+		} first;
+
+		struct {
+			double endA;
+			int number;
+		} second;
+
+		struct {
+			double step;
+			int number;
+		} third;
+	} variable;
+};
+
+using ellipse_spectre_t = struct ellipse_spectre;
+
 struct state
 {
 	std::vector <circle_t> circles;
 	std::vector <ellipse_t> ellipses;
-	QColor cur_color;
+	QColor line_color;
 	QColor sceneColor;
 };
 
@@ -54,5 +116,7 @@ void parametric_algorithm(const circle_t &circle, QGraphicsScene *scene, bool dr
 void parametric_algorithm(const ellipse_t &ellipse, QGraphicsScene *scene, bool draw=true);
 void bresenham_circle(const circle_t &circle, QGraphicsScene *scene, bool draw=true);
 void bresenham_ellipse(const ellipse_t &ellipse, QGraphicsScene *scene, bool draw=true);
+void middle_point(const ellipse_t &ellipse, QGraphicsScene *scene, bool draw=true);
+void middle_point(const circle_t &circle, QGraphicsScene *scene, bool draw=true);
 
 #endif // ALGORITHMS_H

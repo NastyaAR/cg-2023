@@ -9,6 +9,7 @@
 #include <QMessageBox>
 #include <QTimer>
 #include <chrono>
+#include <QRadioButton>
 
 #include "algorithms.h"
 
@@ -28,13 +29,28 @@ public:
 	~MainWindow();
 
 private slots:
+	void on_pushButton_clicked();
+	void on_pushButton_2_clicked();
 	void on_pushButton_3_clicked();
 	void about();
 	void about_me();
 	void read_circle(circle_t &circle);
 	void read_ellipse(ellipse_t &ellipse);
+	void read_circle_spectre(circle_spectre_t &circle_spectre);
+	void read_ellipse_spectre(ellipse_spectre_t &ellipse);
+	void draw_circle(circle_t &circle);
+	void draw_ellipse(ellipse_t &ellipse);
+	void setEnabledAll();
 
 	void on_pushButton_6_clicked();
+
+	void on_radioButton_3_clicked();
+
+	void on_radioButton_clicked();
+
+	void on_radioButton_4_clicked();
+
+	void on_pushButton_4_clicked();
 
 private:
 	QGraphicsScene *scene;

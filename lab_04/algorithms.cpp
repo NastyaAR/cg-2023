@@ -231,3 +231,75 @@ void bresenham_ellipse(const ellipse_t &ellipse, QGraphicsScene *scene, bool dra
 	}
 }
 
+void middle_point(const ellipse_t &ellipse, QGraphicsScene *scene, bool draw)
+{
+	int x = 0;
+	int y = round(ellipse.b);
+
+	int a = round(ellipse.a);
+	int b = round(ellipse.b);
+
+	int sa = a * a;
+	int sb = b * b;
+
+	int dx = 2 * sb * x;
+	int dy = 2 * sa * y;
+
+	int f = 4 * sb + sa - sa * b;
+
+	while (dx < dy)
+	{
+		if (draw) draw_pixcels_half(x, y, ellipse.centerX, ellipse.centerY, ellipse.color, scene);
+		x++;
+		dx += 2 * sb;
+
+		if (f > 0)
+		{
+			y--;
+			dy -= 2 * sa;
+			f -= dy;
+		}
+
+		f += (sb + dx);
+	}
+
+	f = 4 * sa * y - 4 * sb * x + 3 * (sa - sb);
+	while (y >= 0)
+	{
+		if (draw) draw_pixcels_half(x, y, ellipse.centerX, ellipse.centerY, ellipse.color, scene);
+		y--;
+		dy -= 2 * sa;
+
+		if (f < 0)
+		{
+			x++;
+			dx += 2 * sb;
+			f += dx;
+		}
+
+		f += (sa - dy);
+	}
+}
+
+void middle_point(const circle_t &circle, QGraphicsScene *scene, bool draw)
+{
+	int x = 0;
+	int y = round(circle.r);
+	int r = round(circle.r);
+
+	int boundary = round(r * sqrt(2) / 2);
+
+	int f = 1 - r;
+	while (x <= boundary)
+	{
+		if (draw) draw_pixcels_quarter(x, y, circle.centerX, circle.centerY, circle.color, scene);
+		x++;
+		if (f < 0)
+			f += 2 * x + 1;
+		else
+		{
+			y--;
+			f += 2 * (x - y) + 1;
+		}
+	}
+}
