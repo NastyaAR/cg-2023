@@ -150,15 +150,25 @@ void MainWindow::on_pushButton_3_clicked()
 	circle_t circle;
 	ellipse_t ellipse;
 
+	ui->graphicsView->setBackgroundBrush(current_state.sceneColor);
+
+	scene_colors.push_back(current_state.sceneColor);
+
 	if (ui->comboBox_2->currentIndex() == 0)
 	{
 		read_circle(circle);
 		draw_circle(circle);
+		current_state.circles.push_back(circle);
+		QUndoCommand *addCircle = new AddItem(current_state, scene, ADD_CIRCLE);
+		undoStack->push(addCircle);
 	}
 	else
 	{
 		read_ellipse(ellipse);
 		draw_ellipse(ellipse);
+		current_state.circles.push_back(circle);
+		QUndoCommand *addEllipse = new AddItem(current_state, scene, ADD_ELLIPSE);
+		undoStack->push(addEllipse);
 	}
 }
 
@@ -284,6 +294,8 @@ void MainWindow::on_pushButton_4_clicked()
 	double step;
 	double R;
 	double A, B;
+
+	ui->graphicsView->setBackgroundBrush(current_state.sceneColor);
 
 	if (ui->comboBox_2->currentIndex() == 0)
 	{

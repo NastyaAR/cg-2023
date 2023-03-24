@@ -15,11 +15,20 @@ enum method_t
 	MIDDLE_POINT,
 };
 
+enum commands {
+	ADD_CIRCLE,
+	ADD_ELLIPSE,
+	ADD_CIRCLE_SPECTRE,
+	ADD_ELLIPSE_SPECTRE,
+	DELETE_ALL,
+};
+
 struct circle
 {
 	double centerX;
 	double centerY;
 	double r;
+	method_t method;
 	QColor color;
 };
 
@@ -31,6 +40,7 @@ struct ellipse
 	double centerY;
 	double a;
 	double b;
+	method_t method;
 	QColor color;
 };
 
@@ -102,6 +112,8 @@ struct state
 {
 	std::vector <circle_t> circles;
 	std::vector <ellipse_t> ellipses;
+	std::vector <ellipse_spectre_t> ellipse_spectres;
+	std::vector <circle_spectre_t> circle_spectres;
 	QColor line_color;
 	QColor sceneColor;
 };

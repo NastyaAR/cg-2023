@@ -11,7 +11,7 @@
 #include <chrono>
 #include <QRadioButton>
 
-#include "algorithms.h"
+#include "additem.h"
 
 #define SCALE 1.1
 
