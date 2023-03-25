@@ -14,6 +14,9 @@
 #include "additem.h"
 
 #define SCALE 1.1
+#define MAX_R 1000
+#define REPEAT 10
+#define MAX_A 1000
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -51,6 +54,10 @@ private slots:
 	void on_radioButton_4_clicked();
 
 	void on_pushButton_4_clicked();
+
+	void on_pushButton_5_clicked();
+
+	void on_pushButton_7_clicked();
 
 private:
 	QGraphicsScene *scene;

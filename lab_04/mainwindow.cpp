@@ -68,6 +68,8 @@ void MainWindow::read_circle(circle_t &circle) // проверки
 	circle.centerY = ui->lineEdit_2->text().toDouble(&ok2);
 	circle.r = ui->lineEdit_3->text().toDouble(&ok3);
 
+	circle.method = (method_t) ui->comboBox->currentIndex();
+
 	circle.color = current_state.line_color;
 }
 
@@ -79,6 +81,8 @@ void MainWindow::read_ellipse(ellipse_t &ellipse) // проверки
 	ellipse.centerY = ui->lineEdit_2->text().toDouble(&ok2);
 	ellipse.a = ui->lineEdit_4->text().toDouble(&ok3);
 	ellipse.b = ui->lineEdit_5->text().toDouble(&ok4);
+
+	ellipse.method = (method_t) ui->comboBox->currentIndex();
 
 	ellipse.color = current_state.line_color;
 }
@@ -93,6 +97,8 @@ void MainWindow::read_circle_spectre(circle_spectre_t &circle_spectre)
 	circle_spectre.beginR = ui->lineEdit_8->text().toDouble(&ok3);
 
 	circle_spectre.color = current_state.line_color;
+
+	circle_spectre.method = (method_t) ui->comboBox->currentIndex();
 
 	if (! ui->lineEdit_11->isEnabled())
 	{
@@ -124,6 +130,8 @@ void MainWindow::read_ellipse_spectre(ellipse_spectre_t &ellipse_spectre)
 	ellipse_spectre.centerY = ui->lineEdit_7->text().toDouble(&ok4);
 
 	ellipse_spectre.color = current_state.line_color;
+
+	ellipse_spectre.method = (method_t) ui->comboBox->currentIndex();
 
 	if (! ui->lineEdit_11->isEnabled())
 	{
@@ -175,7 +183,11 @@ void MainWindow::on_pushButton_3_clicked()
 
 void MainWindow::on_pushButton_6_clicked()
 {
+	scene_colors.push_back(current_state.sceneColor);
+	QUndoCommand *deleteAll = new AddItem(current_state, scene, DELETE_ALL);
+	undoStack->push(deleteAll);
 	scene->clear();
+	ui->graphicsView->setBackgroundBrush(QColor(255, 255, 255, 255));
 }
 
 static void update_color_on_label(QLabel *label, QColor color)
@@ -243,7 +255,7 @@ void MainWindow::on_radioButton_4_clicked()
 
 void MainWindow::draw_circle(circle_t &circle)
 {
-	switch (ui->comboBox->currentIndex()) {
+	switch (circle.method) {
 	case STANDART:
 		lib_algorithm(circle, scene);
 		break;
@@ -264,7 +276,7 @@ void MainWindow::draw_circle(circle_t &circle)
 
 void MainWindow::draw_ellipse(ellipse_t &ellipse)
 {
-	switch (ui->comboBox->currentIndex()) {
+	switch (ellipse.method) {
 	case STANDART:
 		lib_algorithm(ellipse, scene);
 		break;
@@ -297,20 +309,23 @@ void MainWindow::on_pushButton_4_clicked()
 
 	ui->graphicsView->setBackgroundBrush(current_state.sceneColor);
 
+	scene_colors.push_back(current_state.sceneColor);
+
 	if (ui->comboBox_2->currentIndex() == 0)
 	{
 		read_circle_spectre(circle_spectre);
+
+		circle.method = circle_spectre.method;
+		circle.centerX = circle_spectre.centerX;
+		circle.centerY = circle_spectre.centerY;
+		circle.color = circle_spectre.color;
 
 		switch (circle_spectre.variant)
 		{
 		case 1:
 			for (R = circle_spectre.beginR; R < circle_spectre.variable.first.endR; R += circle_spectre.variable.first.step)
 			{
-				circle.centerX = circle_spectre.centerX;
-				circle.centerY = circle_spectre.centerY;
-				circle.color = circle_spectre.color;
 				circle.r = R;
-
 				draw_circle(circle);
 			}
 			break;
@@ -318,11 +333,7 @@ void MainWindow::on_pushButton_4_clicked()
 			step = (circle_spectre.variable.second.endR - circle_spectre.beginR) / circle_spectre.variable.second.number;
 			for (R = circle_spectre.beginR; R < circle_spectre.variable.second.endR; R += step)
 			{
-				circle.centerX = circle_spectre.centerX;
-				circle.centerY = circle_spectre.centerY;
-				circle.color = circle_spectre.color;
 				circle.r = R;
-
 				draw_circle(circle);
 			}
 			break;
@@ -331,19 +342,25 @@ void MainWindow::on_pushButton_4_clicked()
 			for (int i = 0; i < circle_spectre.variable.third.number; i++)
 			{
 				R += (i * circle_spectre.variable.third.step);
-				circle.centerX = circle_spectre.centerX;
-				circle.centerY = circle_spectre.centerY;
-				circle.color = circle_spectre.color;
 				circle.r = R;
 
 				draw_circle(circle);
 			}
 			break;
 		}
+
+		current_state.circle_spectres.push_back(circle_spectre);
+		QUndoCommand *addCircleSpectre = new AddItem(current_state, scene, ADD_CIRCLE_SPECTRE);
+		undoStack->push(addCircleSpectre);
 	}
 	else
 	{
 		read_ellipse_spectre(ellipse_spectre);
+
+		ellipse.method = ellipse_spectre.method;
+		ellipse.centerX = ellipse_spectre.centerX;
+		ellipse.centerY = ellipse_spectre.centerY;
+		ellipse.color = ellipse_spectre.color;
 
 		switch (ellipse_spectre.variant) {
 		case 1:
@@ -352,10 +369,6 @@ void MainWindow::on_pushButton_4_clicked()
 			{
 				ellipse.a = A;
 				ellipse.b = B;
-				ellipse.centerX = ellipse_spectre.centerX;
-				ellipse.centerY = ellipse_spectre.centerY;
-				ellipse.color = ellipse_spectre.color;
-
 				draw_ellipse(ellipse);
 			}
 			break;
@@ -366,10 +379,6 @@ void MainWindow::on_pushButton_4_clicked()
 			{
 				ellipse.a = A;
 				ellipse.b = B;
-				ellipse.centerX = ellipse_spectre.centerX;
-				ellipse.centerY = ellipse_spectre.centerY;
-				ellipse.color = ellipse_spectre.color;
-
 				draw_ellipse(ellipse);
 			}
 			break;
@@ -382,10 +391,6 @@ void MainWindow::on_pushButton_4_clicked()
 				B += (i * ellipse_spectre.variable.third.step);
 				ellipse.a = A;
 				ellipse.b = B;
-				ellipse.centerX = ellipse_spectre.centerX;
-				ellipse.centerY = ellipse_spectre.centerY;
-				ellipse.color = ellipse_spectre.color;
-
 				draw_ellipse(ellipse);
 			}
 			break;
@@ -393,4 +398,87 @@ void MainWindow::on_pushButton_4_clicked()
 	}
 }
 
+
+
+void MainWindow::on_pushButton_5_clicked()
+{
+	ui->graphicsView->setBackgroundBrush(scene_colors[scene_colors.size() - 1]);
+	scene_colors.pop_back();
+
+	undoStack->undo();
+}
+
+static double get_avg_time(QGraphicsScene *scene, void (*algorithm) (const circle_t &circle, QGraphicsScene *scene, bool draw), bool cflag)
+{
+	circle_t circle = {.centerX = 0, .centerY = 0, .color = Qt::black};
+
+	double sum = 0;
+
+	auto begin = std::chrono::high_resolution_clock::now();
+	auto end = std::chrono::high_resolution_clock::now();
+	double elapsed_ms = 0;
+
+	for (int i = 0; i < REPEAT; i++)
+	{
+		begin = std::chrono::high_resolution_clock::now();
+		for (double R = 10; R < MAX_R; R += 10)
+		{
+			circle.r = R;
+			algorithm(circle, scene, false);
+		}
+		end = std::chrono::high_resolution_clock::now();
+		elapsed_ms = (double) std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+		sum += elapsed_ms;
+	}
+
+	return sum / REPEAT;
+}
+
+static double get_avg_time(QGraphicsScene *scene, void (*algorithm) (const ellipse_t &ellipse, QGraphicsScene *scene, bool draw))
+{
+	ellipse_t ellipse = {.centerX = 0, .centerY = 0, .color = Qt::black};
+	double sum = 0;
+	double B = 0;
+
+	auto begin = std::chrono::high_resolution_clock::now();
+	auto end = std::chrono::high_resolution_clock::now();
+	double elapsed_ms = 0;
+
+	for (int i = 0; i < REPEAT; i++)
+	{
+		begin = std::chrono::high_resolution_clock::now();
+		for (double A = 10; A < MAX_A; A += 10, B += 5)
+		{
+			ellipse.a = A;
+			ellipse.b = B;
+			algorithm(ellipse, scene, false);
+		}
+		end = std::chrono::high_resolution_clock::now();
+		elapsed_ms = (double) std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+		sum += elapsed_ms;
+	}
+
+	return sum / REPEAT;
+}
+
+void MainWindow::on_pushButton_7_clicked()
+{
+	FILE *file = fopen("circle_time.txt", "w");
+	fprintf(file, "%lf ", get_avg_time(scene, lib_algorithm, true));
+	fprintf(file, "%lf ", get_avg_time(scene, canonical_algorithm, true));
+	fprintf(file, "%lf ", get_avg_time(scene, parametric_algorithm, true));
+	fprintf(file, "%lf ", get_avg_time(scene, bresenham_circle, true));
+	fprintf(file, "%lf", get_avg_time(scene, middle_point, true));
+	fclose(file);
+
+	file = fopen("ellipse_time.txt", "w");
+	fprintf(file, "%lf ", get_avg_time(scene, lib_algorithm));
+	fprintf(file, "%lf ", get_avg_time(scene, canonical_algorithm));
+	fprintf(file, "%lf ", get_avg_time(scene, parametric_algorithm));
+	fprintf(file, "%lf ", get_avg_time(scene, bresenham_ellipse));
+	fprintf(file, "%lf", get_avg_time(scene, middle_point));
+	fclose(file);
+
+	std::system("python3 /home/nastya/sem4/cg-2023/lab_04/graph_time.py");
+}
 

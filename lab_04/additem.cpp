@@ -163,6 +163,8 @@ void AddItem::undo()
 	case ADD_ELLIPSE_SPECTRE:
 		old_state.ellipse_spectres.pop_back();
 		break;
+	case DELETE_ALL:
+		break;
 	}
 
 	scene->clear();
