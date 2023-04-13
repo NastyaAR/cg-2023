@@ -13,8 +13,10 @@ static void addEdgeToYGroup(line_segment_t &line, edges_t *yGroups)
 
 	double dy = (line.finishPoint.y - line.startPoint.y);
 	double dx = (line.finishPoint.y - line.startPoint.y) != 0 ? (double)((-(line.finishPoint.x - line.startPoint.x)) / dy) : 0;
+	if (dy != 0) {
 	initEdge(newEdge, (double) line.finishPoint.x, dx, dy);
 	yGroups[line.finishPoint.y].push_back(newEdge);
+	}
 }
 
 static int getMaxScanLine(points_t &points)
@@ -116,12 +118,21 @@ static void computeNewX(edges_t &LAE)
 		LAE[i].xWithScanLine += LAE[i].dx;
 }
 
-void fillFigure(figure_t &figure, QImage *image)
+static void makeDelay(int sleep_time)
+{
+	QTime end = QTime::currentTime().addMSecs(sleep_time);
+	while (QTime::currentTime() < end)
+		QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
+}
+
+void fillFigure(figure_t &figure, QImage *image, QGraphicsScene *scene, double delay)
 {
 	edges_t listActiveEdges;
 
 	edges_t *yGroups = NULL;
 	int number = makeYGroups(figure.lines, figure.points, &yGroups);
+
+	printf("%lf\n", delay);
 
 	for (size_t i = number - 1; i > 0; --i)
 	{
@@ -131,8 +142,17 @@ void fillFigure(figure_t &figure, QImage *image)
 
 		std::sort(listActiveEdges.begin(), listActiveEdges.end(), compEdgeX);
 
-		for (size_t j = 0; j < listActiveEdges.size(); j += 2)
+		for (size_t j = 0; j < listActiveEdges.size(); j += 2) {
+			if (delay != 0)
+				makeDelay(delay);
 			drawStr((listActiveEdges[j].xWithScanLine), (listActiveEdges[j + 1].xWithScanLine), i, figure.fillColor, image);
+		}
+
+		scene->clear();
+		QPixmap pixmap = QPixmap::fromImage(*image);
+		QGraphicsPixmapItem *item = scene->addPixmap(pixmap);
+		item->update();
+
 		decreaseLAE(listActiveEdges);
 		checkLAE(listActiveEdges);
 		computeNewX(listActiveEdges);
@@ -162,15 +182,30 @@ int getIndexCurFigure(figures_t &figures, figure_t &hole)
 	return NOFITFIGURE;
 }
 
-void drawFigure(figure_t &figure, QImage *image)
+void drawFigure(figure_t &figure, QImage *image, QGraphicsScene *scene, bool fill)
 {
 	drawCountour(figure.lines, image);
-	if (figure.isClosed)
-		fillFigure(figure, image);
+	if (figure.isClosed && fill)
+		fillFigure(figure, image, scene);
 }
 
-void drawFigures(figures_t &figures, QImage *image)
+void drawFigures(figures_t &figures, QImage *image, QGraphicsScene *scene, bool fill)
 {
 	for (size_t i = 0; i < figures.size(); ++i)
-		drawFigure(figures[i], image);
+		drawFigure(figures[i], image, scene, fill);
 }
+
+bool isClosedFigure(figure_t &figure)
+{
+	for (size_t i = 0; i < figure.points.size(); ++i)
+		if (countLinesContainPoint(figure.lines, figure.points[i]) < 2)
+			return false;
+	return true;
+}
+
+void updateClosedFlag(figures_t &figures)
+{
+	for (size_t i = 0; i < figures.size(); ++i)
+		figures[i].isClosed = isClosedFigure(figures[i]);
+}
+

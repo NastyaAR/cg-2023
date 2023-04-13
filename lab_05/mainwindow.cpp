@@ -15,6 +15,8 @@ MainWindow::MainWindow(QWidget *parent)
 	ui->graphicsView->setRenderHint(QPainter::Antialiasing); // отключение сглаживания
 	ui->graphicsView->setScene(scene);
 
+	undoStack = new QUndoStack(this);
+
 	ui->graphicsView->viewport()->installEventFilter(this); // всё, что происходит в qgraphicsview отправляется в обработчик EventFilter
 
 	QStringList horzHeaders;
@@ -34,6 +36,7 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
 	delete ui;
+	delete undoStack;
 }
 
 void MainWindow::wheelEvent(QWheelEvent *event)
@@ -112,6 +115,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	QRect view = ui->graphicsView->geometry();
 
 	QImage image = QImage(ui->graphicsView->width(), ui->graphicsView->height(), QImage::Format_ARGB32);
+	image.fill(Qt::transparent);
 	point_t p;
 	line_segment_t line;
 
@@ -154,6 +158,7 @@ void addVec(std::vector<T> &src, std::vector<T> &dest)
 void MainWindow::on_pushButton_9_clicked()
 {
 	QImage image = QImage(ui->graphicsView->width(), ui->graphicsView->height(), QImage::Format_ARGB32);
+	image.fill(Qt::transparent);
 	line_segment_t line;
 
 	initLine(line, points[0], points[points.size() - 1], curColors.borderColor);
@@ -179,6 +184,9 @@ void MainWindow::on_pushButton_9_clicked()
 		figures[i].holes.push_back(newFigure);
 		addHole = false;
 	}
+
+	QUndoCommand *clsCmd = new closeCommand(figures.size() - 1, line, figures, scene);
+	undoStack->push(clsCmd);
 
 	points.clear();
 	lines.clear();
@@ -218,16 +226,19 @@ void MainWindow::on_pushButton_3_clicked()
 
 void MainWindow::on_pushButton_4_clicked()
 {
+	scene->clear();
+
 	QImage image = QImage(ui->graphicsView->width(), ui->graphicsView->height(), QImage::Format_ARGB32);
+	image.fill(Qt::transparent);
 
 	point_t remPoint = removePointFromTable(ui->tableWidget);
 	removePointFromScene(remPoint, &image);
 
 	removePointFromFigure(figures, remPoint);
 
-	scene->clear();
+	updateClosedFlag(figures);
 
-	drawFigures(figures, &image);
+	drawFigures(figures, &image, scene);
 
 	QPixmap pixmap = QPixmap::fromImage(image);
 	scene->addPixmap(pixmap);
@@ -236,12 +247,20 @@ void MainWindow::on_pushButton_4_clicked()
 
 void MainWindow::on_pushButton_5_clicked()
 {
+	scene->clear();
 	QImage image = QImage(ui->graphicsView->width(), ui->graphicsView->height(), QImage::Format_ARGB32);
+	image.fill(Qt::transparent);
 
+	drawFigures(figures, &image, scene, false);
 	for (size_t i = 0; i < figures.size(); ++i)
-		fillFigure(figures[i], &image);
+		fillFigure(figures[i], &image, scene, delay);
+
 	QPixmap pixmap = QPixmap::fromImage(image);
-	scene->addPixmap(pixmap);
+	QGraphicsPixmapItem *item = scene->addPixmap(pixmap);
+	item->update();
+
+	QUndoCommand *fillCmd = new fillCommand(figures, scene);
+	undoStack->push(fillCmd);
 }
 
 static points_t getSelectesPoints(QList <QTableWidgetItem *> list, QTableWidget *tableWidget)
@@ -275,23 +294,40 @@ static lines_t getJoinLines(const points_t &points, const QColor color)
 	return joinLines;
 }
 
-static void addJoinLinesToLines(lines_t &joinLines, lines_t &lines)
+static void addJoinLinesToLines(lines_t &joinLines, lines_t &linesTo)
 {
 	for (size_t i = 0; i < joinLines.size(); ++i)
-		lines.push_back(joinLines[i]);
+		linesTo.push_back(joinLines[i]);
 }
 
 void MainWindow::on_pushButton_8_clicked()
 {
 	QImage image = QImage(ui->graphicsView->width(), ui->graphicsView->height(), QImage::Format_ARGB32);
+	image.fill(Qt::transparent);
 	QList <QTableWidgetItem *> list = ui->tableWidget->selectedItems();
 
 	points_t selectedPoints = getSelectesPoints(list, ui->tableWidget);
 	lines_t joinLines = getJoinLines(selectedPoints, curColors.borderColor);
 
-	addJoinLinesToLines(joinLines, lines);
+	int i = getFigureFromPoints(figures, selectedPoints);
+
+	figure_t newFigure;
+	figures_t holes;
+
+	if (figures.size() != 0)
+		addJoinLinesToLines(joinLines, figures[i].lines);
+	else {
+		addJoinLinesToLines(joinLines, lines);
+		initFigure(newFigure, lines, points, curColors.fillColor, curColors.borderColor, true, holes);
+		figures.push_back(newFigure);
+	}
 
 	drawCountour(joinLines, &image);
+
+	QUndoCommand *joinCmd = new joinCommand(i, joinLines, figures, scene);
+	undoStack->push(joinCmd);
+
+	updateClosedFlag(figures);
 
 	QPixmap pixmap = QPixmap::fromImage(image);
 	scene->addPixmap(pixmap);
@@ -307,6 +343,23 @@ void MainWindow::on_pushButton_11_clicked()
 void MainWindow::on_pushButton_7_clicked()
 {
 	scene->clear();
+	figures.clear();
+	lines.clear();
+	points.clear();
+	flag = true;
+	addHole = false;
 	clearTable(ui->tableWidget);
+}
+
+
+void MainWindow::on_pushButton_6_clicked()
+{
+	undoStack->undo();
+}
+
+
+void MainWindow::on_doubleSpinBox_valueChanged(double arg1)
+{
+	delay = arg1;
 }
 

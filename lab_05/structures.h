@@ -2,6 +2,8 @@
 #define STRUCTURES_H
 
 #include <QColorDialog>
+#include <QGraphicsScene>
+#include <QPixmap>
 
 enum modes {
 	INPUT_MODE,

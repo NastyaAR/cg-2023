@@ -3,6 +3,8 @@
 
 #include <math.h>
 #include <QPainter>
+#include <QTime>
+#include <QCoreApplication>
 #include "structures.h"
 
 void draw_point(const point_t &point, const QColor color, QImage *image);
@@ -17,5 +19,7 @@ void initFigure(figure_t &figure, const lines_t lines, const points_t points, co
 				const QColor border, bool isClosed, const figures_t holes);
 void updateLinesColor(lines_t &lines, QColor color);
 void removePointFromFigure(figures_t &figures, point_t &remPoint);
+int countLinesContainPoint(lines_t &lines, point_t &point);
+int getFigureFromPoints(figures_t &figures, points_t &points);
 
 #endif // DRAW_H

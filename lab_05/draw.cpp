@@ -141,7 +141,6 @@ static bool isEqualPoints(point_t &point1, point_t &point2)
 
 static bool isPointInLine(line_segment_t &line, point_t &point)
 {
-	printf("line s %d %d f %d %d p %d %d\n", line.startPoint.x, line.startPoint.y, line.finishPoint.x, line.finishPoint.y, point.x, point.y);
 	if (isEqualPoints(line.startPoint, point) || isEqualPoints(line.finishPoint, point))
 		return true;
 	return false;
@@ -168,5 +167,40 @@ void removePointFromFigure(figures_t &figures, point_t &remPoint)
 		removeLineFromLines(figures[i].lines, remPoint);
 		figures[i].isClosed = false;
 	}
+}
+
+int countLinesContainPoint(lines_t &lines, point_t &point)
+{
+	int counter = 0;
+	for (size_t i = 0; i < lines.size(); ++i)
+		if (isPointInLine(lines[i], point))
+			++counter;
+
+	return counter;
+}
+
+static bool isPointInPoints(points_t &points, point_t &point)
+{
+	for (size_t i = 0; i < points.size(); ++i)
+		if (isEqualPoints(points[i], point))
+			return true;
+	return false;
+}
+
+int getFigureFromPoints(figures_t &figures, points_t &points)
+{
+	int f = true;
+
+	for (int i = 0; i < figures.size(); ++i) {
+		for (size_t j = 0; j < points.size(); ++j)
+			if (! isPointInPoints(figures[i].points, points[j])) {
+				f = false;
+				break;
+			}
+		if (f)
+			return i;
+	}
+
+	return 0;
 }
 

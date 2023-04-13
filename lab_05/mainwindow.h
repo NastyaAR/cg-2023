@@ -3,11 +3,13 @@
 
 #include <QMainWindow>
 #include <QWheelEvent>
-#include <QGraphicsScene>
 #include <QColorDialog>
-#include <QPixmap>
 #include <QInputDialog>
+#include <QUndoStack>
 
+#include "fillcommand.h"
+#include "joincommand.h"
+#include "closecommand.h"
 #include "table.h"
 #include "fill.h"
 
@@ -49,6 +51,10 @@ private slots:
 
 	void on_pushButton_7_clicked();
 
+	void on_pushButton_6_clicked();
+
+	void on_doubleSpinBox_valueChanged(double arg1);
+
 private:
 	QGraphicsScene *scene;
 	currentColors_t curColors;
@@ -61,5 +67,7 @@ private:
 
 	bool flag = true;
 	bool addHole = false;
+	double delay = 0.0;
+	QUndoStack *undoStack = nullptr;
 };
 #endif // MAINWINDOW_H
