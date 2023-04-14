@@ -12,6 +12,7 @@
 #include <QRadioButton>
 
 #include "additem.h"
+#include "error_handler.h"
 
 #define SCALE 1.1
 #define MAX_R 1000
@@ -37,10 +38,10 @@ private slots:
 	void on_pushButton_3_clicked();
 	void about();
 	void about_me();
-	void read_circle(circle_t &circle);
-	void read_ellipse(ellipse_t &ellipse);
-	void read_circle_spectre(circle_spectre_t &circle_spectre);
-	void read_ellipse_spectre(ellipse_spectre_t &ellipse);
+	err_t read_circle(circle_t &circle);
+	err_t read_ellipse(ellipse_t &ellipse);
+	err_t read_circle_spectre(circle_spectre_t &circle_spectre);
+	err_t read_ellipse_spectre(ellipse_spectre_t &ellipse);
 	void draw_circle(circle_t &circle);
 	void draw_ellipse(ellipse_t &ellipse);
 	void setEnabledAll();

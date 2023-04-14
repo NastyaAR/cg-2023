@@ -1,5 +1,7 @@
 #include "algorithms.h"
 
+#define eps 1e-8
+
 static void draw_pixcel(const int x, const int y, QColor color, QGraphicsScene *scene)
 {
 	QPen pen = QPen(color);
@@ -31,13 +33,13 @@ static void draw_pixcels_half(const int x, const int y, const int x0, const int 
 
 void lib_algorithm(const circle_t &circle, QGraphicsScene *scene, bool draw)
 {
-	QRectF c = QRectF(circle.centerX - circle.r, circle.centerY + circle.r, circle.r * 2, circle.r * 2);
+	QRectF c = QRectF(circle.centerX - circle.r, circle.centerY - circle.r, circle.r * 2, circle.r * 2);
 	if (draw) scene->addEllipse(c, QPen(circle.color), QBrush(QColor(0, 0, 0, 0)));
 }
 
 void lib_algorithm(const ellipse_t &ellipse, QGraphicsScene *scene, bool draw)
 {
-	QRectF el = QRectF(ellipse.centerX, ellipse.centerY, ellipse.a * 2, ellipse.b * 2);
+	QRectF el = QRectF(ellipse.centerX - ellipse.a, ellipse.centerY - ellipse.b, ellipse.a * 2, ellipse.b * 2);
 	if (draw) scene->addEllipse(el, QPen(ellipse.color), QBrush(QColor(0, 0, 0, 0)));
 }
 

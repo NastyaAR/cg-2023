@@ -11,12 +11,14 @@ CONFIG += c++11
 SOURCES += \
     additem.cpp \
     algorithms.cpp \
+    error_handler.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
     additem.h \
     algorithms.h \
+    error_handler.h \
     mainwindow.h
 
 FORMS += \

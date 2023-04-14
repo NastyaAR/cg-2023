@@ -58,7 +58,7 @@ void MainWindow::wheelEvent(QWheelEvent *event)
 		ui->graphicsView->scale(1 / SCALE, 1 / SCALE);
 }
 
-err_t MainWindow::read_line(line_segment_t &line) // добавить проверки
+err_t MainWindow::read_line(line_segment_t &line)
 {
     bool ok1, ok2, ok3, ok4;
 
@@ -78,7 +78,7 @@ err_t MainWindow::read_line(line_segment_t &line) // добавить прове
 	return SUCCESS;
 }
 
-err_t MainWindow::read_spectre(spectre_t &spectre) // тут тоже
+err_t MainWindow::read_spectre(spectre_t &spectre)
 {
 	bool ok1, ok2, ok3, ok4;
 

@@ -43,7 +43,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::about()
 {
-	QMessageBox::information(this, "О программе", "Программа позволяет рисовать отрезки/спектры отрезков различными алгоритмами.\nРеализована возможность сравнения алгоритмов по времени и ступенчатости.");
+	QMessageBox::information(this, "О программе", "Программа позволяет рисовать окружности, эллипсы/спектры данных кривых различными алгоритмами.\nРеализована возможность сравнения алгоритмов по времени.");
 }
 
 void MainWindow::about_me()
@@ -60,7 +60,7 @@ void MainWindow::wheelEvent(QWheelEvent *event)
 		ui->graphicsView->scale(1 / SCALE, 1 / SCALE);
 }
 
-void MainWindow::read_circle(circle_t &circle) // проверки
+err_t MainWindow::read_circle(circle_t &circle)
 {
 	bool ok1, ok2, ok3;
 
@@ -68,12 +68,20 @@ void MainWindow::read_circle(circle_t &circle) // проверки
 	circle.centerY = ui->lineEdit_2->text().toDouble(&ok2);
 	circle.r = ui->lineEdit_3->text().toDouble(&ok3);
 
+	if (!ok1 || !ok2 || !ok3)
+		return INCORRECT_CIRCLE;
+
+	if (circle.r <= 0)
+		return NULLR;
+
 	circle.method = (method_t) ui->comboBox->currentIndex();
 
 	circle.color = current_state.line_color;
+
+	return SUCCESS;
 }
 
-void MainWindow::read_ellipse(ellipse_t &ellipse) // проверки
+err_t MainWindow::read_ellipse(ellipse_t &ellipse)
 {
 	bool ok1, ok2, ok3, ok4;
 
@@ -82,19 +90,30 @@ void MainWindow::read_ellipse(ellipse_t &ellipse) // проверки
 	ellipse.a = ui->lineEdit_4->text().toDouble(&ok3);
 	ellipse.b = ui->lineEdit_5->text().toDouble(&ok4);
 
+	if (!ok1 || !ok2 || !ok3 || !ok4)
+		return INCORRECT_ELLIPSE;
+
+	if (ellipse.a <= 0 || ellipse.b <= 0)
+		return NULLAB;
+
 	ellipse.method = (method_t) ui->comboBox->currentIndex();
 
 	ellipse.color = current_state.line_color;
+
+	return SUCCESS;
 }
 
-void MainWindow::read_circle_spectre(circle_spectre_t &circle_spectre)
+err_t MainWindow::read_circle_spectre(circle_spectre_t &circle_spectre)
 {
 	bool ok1, ok2, ok3, ok4, ok5;
 
 	circle_spectre.centerX = ui->lineEdit_6->text().toDouble(&ok1);
 	circle_spectre.centerY = ui->lineEdit_7->text().toDouble(&ok2);
 
-	circle_spectre.beginR = ui->lineEdit_8->text().toDouble(&ok3);
+	circle_spectre.beginR = ui->lineEdit_8->text().toDouble(&ok3);\
+
+	if (ok3 && circle_spectre.beginR == 0)
+		return NULLR;
 
 	circle_spectre.color = current_state.line_color;
 
@@ -118,14 +137,23 @@ void MainWindow::read_circle_spectre(circle_spectre_t &circle_spectre)
 		circle_spectre.variable.third.step = ui->lineEdit_10->text().toDouble(&ok5);
 		circle_spectre.variant = 3;
 	}
+
+	if (!ok1 || !ok2 || !ok3 || !ok4 || !ok5)
+		return INCORRECT_CIRCLE_SPECTRE;
+
+	return SUCCESS;
 }
 
-void MainWindow::read_ellipse_spectre(ellipse_spectre_t &ellipse_spectre)
+err_t MainWindow::read_ellipse_spectre(ellipse_spectre_t &ellipse_spectre)
 {
 	bool ok1, ok2, ok3, ok4, ok5, ok6;
 
 	ellipse_spectre.beginA = ui->lineEdit_12->text().toDouble(&ok1);
 	ellipse_spectre.beginB = ui->lineEdit_14->text().toDouble(&ok2);
+
+	if (ok1 && ok2 && (ellipse_spectre.beginA == 0 || ellipse_spectre.beginB == 0))
+		return NULLAB;
+
 	ellipse_spectre.centerX = ui->lineEdit_6->text().toDouble(&ok3);
 	ellipse_spectre.centerY = ui->lineEdit_7->text().toDouble(&ok4);
 
@@ -151,6 +179,11 @@ void MainWindow::read_ellipse_spectre(ellipse_spectre_t &ellipse_spectre)
 		ellipse_spectre.variable.third.step = ui->lineEdit_10->text().toDouble(&ok6);
 		ellipse_spectre.variant = 3;
 	}
+
+	if (!ok1 || !ok2 || !ok3 || !ok4 || !ok5)
+		return INCORRECT_ELLIPSE_SPECTRE;
+
+	return SUCCESS;
 }
 
 void MainWindow::on_pushButton_3_clicked()
@@ -158,13 +191,19 @@ void MainWindow::on_pushButton_3_clicked()
 	circle_t circle;
 	ellipse_t ellipse;
 
+	err_t rc = SUCCESS;
+
 	ui->graphicsView->setBackgroundBrush(current_state.sceneColor);
 
 	scene_colors.push_back(current_state.sceneColor);
 
 	if (ui->comboBox_2->currentIndex() == 0)
 	{
-		read_circle(circle);
+		if ((rc = read_circle(circle)) != SUCCESS)
+		{
+			handle_error(rc);
+			return;
+		}
 		draw_circle(circle);
 		current_state.circles.push_back(circle);
 		QUndoCommand *addCircle = new AddItem(current_state, scene, ADD_CIRCLE);
@@ -172,9 +211,13 @@ void MainWindow::on_pushButton_3_clicked()
 	}
 	else
 	{
-		read_ellipse(ellipse);
+		if ((rc = read_ellipse(ellipse)) != SUCCESS)
+		{
+			handle_error(rc);
+			return;
+		}
 		draw_ellipse(ellipse);
-		current_state.circles.push_back(circle);
+		current_state.ellipses.push_back(ellipse);
 		QUndoCommand *addEllipse = new AddItem(current_state, scene, ADD_ELLIPSE);
 		undoStack->push(addEllipse);
 	}
@@ -307,13 +350,19 @@ void MainWindow::on_pushButton_4_clicked()
 	double R;
 	double A, B;
 
+	err_t rc = SUCCESS;
+
 	ui->graphicsView->setBackgroundBrush(current_state.sceneColor);
 
 	scene_colors.push_back(current_state.sceneColor);
 
 	if (ui->comboBox_2->currentIndex() == 0)
 	{
-		read_circle_spectre(circle_spectre);
+		if ((rc = read_circle_spectre(circle_spectre)) != SUCCESS)
+		{
+			handle_error(rc);
+			return;
+		}
 
 		circle.method = circle_spectre.method;
 		circle.centerX = circle_spectre.centerX;
@@ -355,7 +404,11 @@ void MainWindow::on_pushButton_4_clicked()
 	}
 	else
 	{
-		read_ellipse_spectre(ellipse_spectre);
+		if ((rc = read_ellipse_spectre(ellipse_spectre)) != SUCCESS)
+		{
+			handle_error(rc);
+			return;
+		}
 
 		ellipse.method = ellipse_spectre.method;
 		ellipse.centerX = ellipse_spectre.centerX;
@@ -395,6 +448,10 @@ void MainWindow::on_pushButton_4_clicked()
 			}
 			break;
 		}
+
+		current_state.ellipse_spectres.push_back(ellipse_spectre);
+		QUndoCommand *addEllipseSpectre = new AddItem(current_state, scene, ADD_ELLIPSE_SPECTRE);
+		undoStack->push(addEllipseSpectre);
 	}
 }
 
@@ -464,6 +521,11 @@ static double get_avg_time(QGraphicsScene *scene, void (*algorithm) (const ellip
 void MainWindow::on_pushButton_7_clicked()
 {
 	FILE *file = fopen("circle_time.txt", "w");
+	if (!file)
+	{
+		handle_error(FILE_OPEN_ERROR);
+		return;
+	}
 	fprintf(file, "%lf ", get_avg_time(scene, lib_algorithm, true));
 	fprintf(file, "%lf ", get_avg_time(scene, canonical_algorithm, true));
 	fprintf(file, "%lf ", get_avg_time(scene, parametric_algorithm, true));
@@ -472,6 +534,11 @@ void MainWindow::on_pushButton_7_clicked()
 	fclose(file);
 
 	file = fopen("ellipse_time.txt", "w");
+	if (!file)
+	{
+		handle_error(FILE_OPEN_ERROR);
+		return;
+	}
 	fprintf(file, "%lf ", get_avg_time(scene, lib_algorithm));
 	fprintf(file, "%lf ", get_avg_time(scene, canonical_algorithm));
 	fprintf(file, "%lf ", get_avg_time(scene, parametric_algorithm));

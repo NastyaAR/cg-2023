@@ -17,7 +17,6 @@
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QMainWindow>
-#include <QtWidgets/QMenu>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QStatusBar>
@@ -66,21 +65,19 @@ public:
     QLineEdit *lineEdit;
     QVBoxLayout *verticalLayout;
     QFormLayout *formLayout;
+    QLineEdit *lineEdit_7;
+    QLineEdit *lineEdit_8;
     QLineEdit *lineEdit_4;
     QLineEdit *lineEdit_3;
     QFormLayout *formLayout_2;
     QLineEdit *lineEdit_5;
     QLineEdit *lineEdit_6;
     QFormLayout *formLayout_3;
-    QLineEdit *lineEdit_7;
-    QLineEdit *lineEdit_8;
     QPushButton *turn;
     QPushButton *loading;
     QPushButton *cancel_btn;
     QGraphicsView *graphicsView;
     QMenuBar *menubar;
-    QMenu *menu;
-    QMenu *menu_2;
     QStatusBar *statusbar;
 
     void setupUi(QMainWindow *MainWindow)
@@ -256,16 +253,27 @@ public:
         verticalLayout->setObjectName(QString::fromUtf8("verticalLayout"));
         formLayout = new QFormLayout();
         formLayout->setObjectName(QString::fromUtf8("formLayout"));
+        lineEdit_7 = new QLineEdit(centralwidget);
+        lineEdit_7->setObjectName(QString::fromUtf8("lineEdit_7"));
+
+        formLayout->setWidget(0, QFormLayout::LabelRole, lineEdit_7);
+
+        lineEdit_8 = new QLineEdit(centralwidget);
+        lineEdit_8->setObjectName(QString::fromUtf8("lineEdit_8"));
+        lineEdit_8->setReadOnly(true);
+
+        formLayout->setWidget(0, QFormLayout::FieldRole, lineEdit_8);
+
         lineEdit_4 = new QLineEdit(centralwidget);
         lineEdit_4->setObjectName(QString::fromUtf8("lineEdit_4"));
 
-        formLayout->setWidget(0, QFormLayout::LabelRole, lineEdit_4);
+        formLayout->setWidget(1, QFormLayout::LabelRole, lineEdit_4);
 
         lineEdit_3 = new QLineEdit(centralwidget);
         lineEdit_3->setObjectName(QString::fromUtf8("lineEdit_3"));
         lineEdit_3->setReadOnly(true);
 
-        formLayout->setWidget(0, QFormLayout::FieldRole, lineEdit_3);
+        formLayout->setWidget(1, QFormLayout::FieldRole, lineEdit_3);
 
 
         verticalLayout->addLayout(formLayout);
@@ -288,36 +296,26 @@ public:
 
         formLayout_3 = new QFormLayout();
         formLayout_3->setObjectName(QString::fromUtf8("formLayout_3"));
-        lineEdit_7 = new QLineEdit(centralwidget);
-        lineEdit_7->setObjectName(QString::fromUtf8("lineEdit_7"));
-
-        formLayout_3->setWidget(0, QFormLayout::LabelRole, lineEdit_7);
-
-        lineEdit_8 = new QLineEdit(centralwidget);
-        lineEdit_8->setObjectName(QString::fromUtf8("lineEdit_8"));
-        lineEdit_8->setReadOnly(true);
-
-        formLayout_3->setWidget(0, QFormLayout::FieldRole, lineEdit_8);
-
         turn = new QPushButton(centralwidget);
         turn->setObjectName(QString::fromUtf8("turn"));
         turn->setStyleSheet(QString::fromUtf8("font: 81 20pt \"Noto Sans\";"));
 
         formLayout_3->setWidget(1, QFormLayout::SpanningRole, turn);
 
-
-        verticalLayout->addLayout(formLayout_3);
-
         loading = new QPushButton(centralwidget);
         loading->setObjectName(QString::fromUtf8("loading"));
         loading->setStyleSheet(QString::fromUtf8("font: 81 20pt \"Noto Sans\";"));
 
-        verticalLayout->addWidget(loading);
+        formLayout_3->setWidget(2, QFormLayout::LabelRole, loading);
 
         cancel_btn = new QPushButton(centralwidget);
         cancel_btn->setObjectName(QString::fromUtf8("cancel_btn"));
+        cancel_btn->setStyleSheet(QString::fromUtf8("font: 81 20pt \"Noto Sans\";"));
 
-        verticalLayout->addWidget(cancel_btn);
+        formLayout_3->setWidget(2, QFormLayout::FieldRole, cancel_btn);
+
+
+        verticalLayout->addLayout(formLayout_3);
 
 
         verticalLayout_2->addLayout(verticalLayout);
@@ -340,20 +338,10 @@ public:
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName(QString::fromUtf8("menubar"));
         menubar->setGeometry(QRect(0, 0, 1268, 30));
-        menu = new QMenu(menubar);
-        menu->setObjectName(QString::fromUtf8("menu"));
-        menu_2 = new QMenu(menubar);
-        menu_2->setObjectName(QString::fromUtf8("menu_2"));
         MainWindow->setMenuBar(menubar);
         statusbar = new QStatusBar(MainWindow);
         statusbar->setObjectName(QString::fromUtf8("statusbar"));
         MainWindow->setStatusBar(statusbar);
-
-        menubar->addAction(menu->menuAction());
-        menubar->addAction(menu_2->menuAction());
-        menu->addAction(action);
-        menu->addAction(action_2);
-        menu_2->addAction(action_3);
 
         retranslateUi(MainWindow);
 
@@ -377,14 +365,12 @@ public:
         scaling->setText(QCoreApplication::translate("MainWindow", "\320\234\320\260\321\201\321\210\321\202\320\260\320\261\320\270\321\200\320\276\320\262\320\260\321\202\321\214", nullptr));
         lineEdit_10->setText(QCoreApplication::translate("MainWindow", "\320\246\320\265\320\275\321\202\321\200 X", nullptr));
         lineEdit->setText(QCoreApplication::translate("MainWindow", "\320\237\320\276\320\262\320\276\321\200\320\276\321\202 \320\275\320\260", nullptr));
+        lineEdit_8->setText(QCoreApplication::translate("MainWindow", "\320\243\320\263\320\276\320\273", nullptr));
         lineEdit_3->setText(QCoreApplication::translate("MainWindow", "\320\246\320\265\320\275\321\202\321\200 X", nullptr));
         lineEdit_6->setText(QCoreApplication::translate("MainWindow", "\320\246\320\265\320\275\321\202\321\200 Y", nullptr));
-        lineEdit_8->setText(QCoreApplication::translate("MainWindow", "\320\243\320\263\320\276\320\273", nullptr));
         turn->setText(QCoreApplication::translate("MainWindow", "\320\237\320\276\320\262\320\265\321\200\320\275\321\203\321\202\321\214", nullptr));
         loading->setText(QCoreApplication::translate("MainWindow", "\320\227\320\260\320\263\321\200\321\203\320\267\320\270\321\202\321\214 \320\274\320\276\320\264\320\265\320\273\321\214", nullptr));
         cancel_btn->setText(QCoreApplication::translate("MainWindow", "\320\236\321\202\320\274\320\265\320\275\320\270\321\202\321\214", nullptr));
-        menu->setTitle(QCoreApplication::translate("MainWindow", "\320\230\320\275\321\204\320\276\321\200\320\274\320\260\321\206\320\270\321\217", nullptr));
-        menu_2->setTitle(QCoreApplication::translate("MainWindow", "\320\236\321\202\320\274\320\265\320\275\320\260", nullptr));
     } // retranslateUi
 
 };

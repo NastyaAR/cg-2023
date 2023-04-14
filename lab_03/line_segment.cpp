@@ -14,6 +14,7 @@ static void draw_pixcel(const int x, const int y, QColor color, QGraphicsScene *
 {
     QPen pen = QPen(color);
     QBrush brush = QBrush(color);
+	pen.setJoinStyle(Qt::MiterJoin);
 
     scene->addRect(x, y, 1, 1, pen, brush);
 }
