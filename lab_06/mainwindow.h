@@ -5,6 +5,9 @@
 #include <QWheelEvent>
 #include <QInputDialog>
 
+#include "fillcommand.h"
+#include "joincommand.h"
+#include "closecommand.h"
 #include "fill.h"
 #include "table.h"
 
@@ -47,6 +50,12 @@ private slots:
 
 	void on_pushButton_8_clicked();
 
+	void on_pushButton_13_clicked();
+
+	void on_doubleSpinBox_valueChanged(double arg1);
+
+	void on_pushButton_9_clicked();
+
 private:
 	QGraphicsScene *scene;
 	currentColors_t curColors;
@@ -59,6 +68,10 @@ private:
 
 	bool flag = true;
 	bool addHole = false;
+	bool selectSeed = false;
+	point_t curSeed;
 	double delay = 0.0;
+
+	QUndoStack *undoStack = nullptr;
 };
 #endif // MAINWINDOW_H

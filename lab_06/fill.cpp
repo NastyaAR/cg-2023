@@ -125,14 +125,12 @@ static void makeDelay(int sleep_time)
 		QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
 }
 
-void fillFigure(figure_t &figure, QImage *image, QGraphicsScene *scene, double delay)
+void fillFigure(figure_t &figure, QImage *image, QGraphicsScene *scene, double delay, bool fill)
 {
 	edges_t listActiveEdges;
 
 	edges_t *yGroups = NULL;
 	int number = makeYGroups(figure.lines, figure.points, &yGroups);
-
-	printf("%lf\n", delay);
 
 	for (size_t i = number - 1; i > 0; --i)
 	{
@@ -145,20 +143,21 @@ void fillFigure(figure_t &figure, QImage *image, QGraphicsScene *scene, double d
 		for (size_t j = 0; j < listActiveEdges.size(); j += 2) {
 			if (delay != 0)
 				makeDelay(delay);
-			drawStr((listActiveEdges[j].xWithScanLine), (listActiveEdges[j + 1].xWithScanLine), i, figure.fillColor, image);
+			if (fill) drawStr((listActiveEdges[j].xWithScanLine), (listActiveEdges[j + 1].xWithScanLine), i, figure.fillColor, image);
 		}
 
+		if (fill) {
 		scene->clear();
 		QPixmap pixmap = QPixmap::fromImage(*image);
 		QGraphicsPixmapItem *item = scene->addPixmap(pixmap);
-		item->update();
+		item->update(); }
 
 		decreaseLAE(listActiveEdges);
 		checkLAE(listActiveEdges);
 		computeNewX(listActiveEdges);
 	}
 
-	drawCountour(figure.lines, image);
+	if (fill) drawCountour(figure.lines, image);
 	delete[] yGroups;
 }
 
@@ -209,64 +208,40 @@ void updateClosedFlag(figures_t &figures)
 		figures[i].isClosed = isClosedFigure(figures[i]);
 }
 
-static bool checkPixel(const int x, const int y, QColor color, QImage *image)
-{
-	QRgb colors = image->pixel(x, y);
-	QColor pixelColor = QColor(colors);
 
-	if (color == pixelColor)
-	{
-		printf("dsf\n");
-		return true;
-	}
-	return false;
-}
-
-
-void fillSeed(figures_t &figures, QGraphicsView *graphicsView, QGraphicsScene *scene, double delay)
+void fillSeed(figure_t &figure, QGraphicsView *graphicsView, QImage *image, QGraphicsScene *scene, double delay, bool fill)
 {
 	std::stack <point_t> seedStack;
-	seedStack.push(figures[0].seedPixel);
-
-	QImage image = QImage(graphicsView->width(), graphicsView->height(), QImage::Format_ARGB32);
-	image.fill(Qt::transparent);
-
-	drawCountour(figures[0].lines, &image);
-	drawCountour(figures[1].lines, &image);
+	seedStack.push(figure.seedPixel);
 
 	while (! seedStack.empty())
 	{
 		point_t curPixel = seedStack.top();
 		seedStack.pop();
-		//break;
 
 		int x = curPixel.x;
 		int y = curPixel.y;
 		int tmpY = y;
 
-		draw_point(x, y, figures[0].fillColor, &image);
-		printf("2346\n");
-		//setNewColorPixel(curPixel, figure.fillColor, image);
+		if (fill) draw_point(x, y, figure.fillColor, image);
 
 		int tmpX = x;
 		x = tmpX + 1;
 
-		while (image.pixelColor(x, y) == Qt::transparent)
+		while (image->pixelColor(x, y) == Qt::transparent)
 		{
-			draw_point(x, y, figures[0].fillColor, &image);
+			if (fill) draw_point(x, y, figure.fillColor, image);
 			x++;
-			printf("1\n");
 		}
 
 		int rightX = x - 1;
 		x = tmpX;
 		x--;
 
-		while (image.pixelColor(x, y) == Qt::transparent)
+		while (image->pixelColor(x, y) == Qt::transparent)
 		{
-			draw_point(x, y, figures[0].fillColor, &image);
+			if (fill) draw_point(x, y, figure.fillColor, image);
 			x--;
-			printf("2\n");
 		}
 
 		int leftX = x + 1;
@@ -278,8 +253,8 @@ void fillSeed(figures_t &figures, QGraphicsView *graphicsView, QGraphicsScene *s
 		while (x <= rightX)
 		{
 			bool flag = false;
-			while ((image.pixelColor(x, y) != figures[0].borderColor
-				   && image.pixelColor(x, y) != figures[0].fillColor)
+			while ((image->pixelColor(x, y) != figure.borderColor
+				   && image->pixelColor(x, y) != figure.fillColor)
 				   && x < rightX)
 			{
 				if (flag == false) flag = true;
@@ -288,26 +263,24 @@ void fillSeed(figures_t &figures, QGraphicsView *graphicsView, QGraphicsScene *s
 
 			if (flag)
 			{
-				if ((image.pixelColor(x, y) != figures[0].borderColor
-						&& image.pixelColor(x, y) != figures[0].fillColor)
+				if ((image->pixelColor(x, y) != figure.borderColor
+						&& image->pixelColor(x, y) != figure.fillColor)
 						&& x == rightX)
 				{
 					initPoint(curPixel, x, y);
 					seedStack.push(curPixel);
-					printf("push? %d %d\n", x, y);
 				}
 				else
 				{
 					initPoint(curPixel, x - 1, y);
 					seedStack.push(curPixel);
-					printf("push2? %d %d\n", x-1, y);
 				}
 				flag = false;
 			}
 
 			int entryX = x;
-			while ((image.pixelColor(x, y) == figures[0].borderColor
-				   || image.pixelColor(x, y) == figures[0].fillColor)
+			while ((image->pixelColor(x, y) == figure.borderColor
+				   || image->pixelColor(x, y) == figure.fillColor)
 				   && x < rightX)
 				x++;
 
@@ -322,8 +295,8 @@ void fillSeed(figures_t &figures, QGraphicsView *graphicsView, QGraphicsScene *s
 		while (x <= rightX)
 		{
 			bool flag = false;
-			while (image.pixelColor(x, y) != figures[0].borderColor
-				   && image.pixelColor(x, y) != figures[0].fillColor
+			while (image->pixelColor(x, y) != figure.borderColor
+				   && image->pixelColor(x, y) != figure.fillColor
 				   && x < rightX)
 			{
 				if (flag == false) flag = true;
@@ -332,26 +305,24 @@ void fillSeed(figures_t &figures, QGraphicsView *graphicsView, QGraphicsScene *s
 
 			if (flag)
 			{
-				if (image.pixelColor(x, y) != figures[0].borderColor
-						&& image.pixelColor(x, y) != figures[0].fillColor
+				if (image->pixelColor(x, y) != figure.borderColor
+						&& image->pixelColor(x, y) != figure.fillColor
 						&& x == rightX)
 				{
 					initPoint(curPixel, x, y);
 					seedStack.push(curPixel);
-					printf("1 y=%d\n", y);
 				}
 				else
 				{
 					initPoint(curPixel, x - 1, y);
 					seedStack.push(curPixel);
-					printf("2 y=%d\n", y);
 				}
 				flag = false;
 			}
 
 			int entryX = x;
-			while ((image.pixelColor(x, y) == figures[0].borderColor
-					|| image.pixelColor(x, y) == figures[0].fillColor)
+			while ((image->pixelColor(x, y) == figure.borderColor
+					|| image->pixelColor(x, y) == figure.fillColor)
 					&& x < rightX)
 				x++;
 
@@ -361,14 +332,11 @@ void fillSeed(figures_t &figures, QGraphicsView *graphicsView, QGraphicsScene *s
 		}
 		if (delay)
 		{
-			QPixmap pixmap = QPixmap::fromImage(image);
-			QGraphicsPixmapItem* item = scene->addPixmap(pixmap);
-			item->update();
 			makeDelay(delay);
 		}
+		if (fill) { scene->clear();
+		QPixmap pixmap = QPixmap::fromImage(*image);
+		QGraphicsPixmapItem* item = scene->addPixmap(pixmap);
+		item->update(); }
 	}
-
-	QPixmap pixmap = QPixmap::fromImage(image);
-	QGraphicsPixmapItem* item = scene->addPixmap(pixmap);
-	item->update();
 }

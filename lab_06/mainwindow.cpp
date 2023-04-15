@@ -15,7 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
 	ui->graphicsView->setRenderHint(QPainter::Antialiasing); // отключение сглаживания
 	ui->graphicsView->setScene(scene);
 
-	//undoStack = new QUndoStack(this);
+	undoStack = new QUndoStack(this);
 
 	ui->graphicsView->viewport()->installEventFilter(this); // всё, что происходит в qgraphicsview отправляется в обработчик EventFilter
 
@@ -81,8 +81,8 @@ static void updateColorOfFigures(figures_t &figures, QColor fill, QColor border)
 {
 	for (size_t i = 0; i < figures.size(); ++i)
 	{
-		//initFigure(figures[i], figures[i].lines, figures[i].points, fill, border, figures[i].isClosed, figures[i].holes);
-		//updateLinesColor(figures[i].lines, border);
+		initFigure(figures[i], figures[i].lines, figures[i].points, fill, border, figures[i].isClosed, figures[i].holes, figures[i].seedPixel);
+		updateLinesColor(figures[i].lines, border);
 	}
 }
 
@@ -100,7 +100,7 @@ void MainWindow::on_pushButton_clicked()
 	curColors.fillColor = QColorDialog::getColor();
 	update_color_on_label(ui->label_2, curColors.fillColor);
 	updateColorOfFigures(figures, curColors.fillColor, curColors.borderColor);
-	//updateLinesColor(lines, curColors.borderColor);
+	updateLinesColor(lines, curColors.borderColor);
 }
 
 void MainWindow::on_pushButton_2_clicked()
@@ -108,13 +108,20 @@ void MainWindow::on_pushButton_2_clicked()
 	curColors.borderColor = QColorDialog::getColor();
 	update_color_on_label(ui->label_3, curColors.borderColor);
 	updateColorOfFigures(figures, curColors.fillColor, curColors.borderColor);
-	//updateLinesColor(lines, curColors.borderColor);
+	updateLinesColor(lines, curColors.borderColor);
+}
+
+
+static void setSeedPixel(figures_t &figures, point_t &seedPixel)
+{
+	for (size_t i = 0; i < figures.size(); ++i)
+		figures[0].seedPixel = seedPixel;
 }
 
 
 void MainWindow::mousePressEvent(QMouseEvent* event)
 {
-	if (ui->comboBox->currentIndex() == INPUT_MODE) {
+	if (ui->comboBox->currentIndex() == INPUT_MODE && !selectSeed) {
 	QRect view = ui->graphicsView->geometry();
 
 	QImage image = QImage(ui->graphicsView->width(), ui->graphicsView->height(), QImage::Format_ARGB32);
@@ -139,6 +146,21 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 
 	QPixmap pixmap = QPixmap::fromImage(image);
 	scene->addPixmap(pixmap);
+	}
+	else if (selectSeed)
+	{
+		QRect view = ui->graphicsView->geometry();
+		point_t curSeed;
+		char *str = (char *) malloc(10);
+		initPoint(curSeed, event->pos().x() - view.x(), event->pos().y() - view.y() - menuBar()->geometry().height());
+		sprintf(str, "%d", curSeed.x);
+		ui->lineEdit->setText(QString(str));
+		sprintf(str, "%d", curSeed.y);
+		ui->lineEdit_2->setText(QString(str));
+		printf("%d %d\n", curSeed.x, curSeed.y);
+		setSeedPixel(figures, curSeed);
+		selectSeed = false;
+		free(str);
 	}
 }
 
@@ -272,8 +294,8 @@ void MainWindow::on_pushButton_5_clicked()
 
 	drawCountour(joinLines, &image);
 
-	//QUndoCommand *joinCmd = new joinCommand(i, joinLines, figures, scene);
-	//undoStack->push(joinCmd);
+	QUndoCommand *joinCmd = new joinCommand(i, joinLines, figures, scene);
+	undoStack->push(joinCmd);
 
 	updateClosedFlag(figures);
 
@@ -330,8 +352,8 @@ printf("in %d %d\n", seedPoint.x, seedPoint.y);
 		addHole = false;
 	}
 
-	//QUndoCommand *clsCmd = new closeCommand(figures.size() - 1, line, figures, scene);
-	//undoStack->push(clsCmd);
+	QUndoCommand *clsCmd = new closeCommand(figures.size() - 1, line, figures, scene);
+	undoStack->push(clsCmd);
 
 	points.clear();
 	lines.clear();
@@ -352,12 +374,34 @@ void MainWindow::on_pushButton_8_clicked()
 	QImage image = QImage(ui->graphicsView->width(), ui->graphicsView->height(), QImage::Format_ARGB32);
 	image.fill(Qt::transparent);
 
-	drawCountour(figures[0].lines, &image);
+	for (size_t i = 0; i < figures.size(); ++i)
+		drawCountour(figures[i].lines, &image);
 
-	printf("%d %d\n", figures[0].seedPixel.x, figures[0].seedPixel.y);
-	fillSeed(figures, ui->graphicsView, scene, 5);
+	for (size_t i = 0; i < figures.size(); ++i)
+		fillSeed(figures[i], ui->graphicsView, &image, scene, delay);
 
 	QPixmap pixmap = QPixmap::fromImage(image);
 	scene->addPixmap(pixmap);
+
+	QUndoCommand *fillCmd = new fillCommand(figures, scene);
+	undoStack->push(fillCmd);
+}
+
+
+void MainWindow::on_pushButton_13_clicked()
+{
+	selectSeed = true;
+}
+
+
+void MainWindow::on_doubleSpinBox_valueChanged(double arg1)
+{
+	delay = arg1;
+}
+
+
+void MainWindow::on_pushButton_9_clicked()
+{
+	undoStack->undo();
 }
 
