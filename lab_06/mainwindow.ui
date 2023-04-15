@@ -205,6 +205,13 @@ font: 75 16pt &quot;Carlito&quot;;</string>
          </widget>
         </item>
         <item>
+         <widget class="QPushButton" name="pushButton_14">
+          <property name="text">
+           <string>Клавиатурный ввод</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <layout class="QGridLayout" name="gridLayout">
           <item row="0" column="0">
            <widget class="QLabel" name="label_7">

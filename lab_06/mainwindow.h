@@ -10,6 +10,7 @@
 #include "closecommand.h"
 #include "fill.h"
 #include "table.h"
+#include "error_handler.h"
 
 #define SCALE 1.1
 #define REPEAT 50
@@ -25,10 +26,13 @@ class MainWindow : public QMainWindow
 public:
 	MainWindow(QWidget *parent = nullptr);
 	~MainWindow();
-	void wheelEvent(QWheelEvent *event);
-	void mousePressEvent(QMouseEvent* event);
 
 private slots:
+	void wheelEvent(QWheelEvent *event);
+	void mousePressEvent(QMouseEvent* event);
+	void about();
+	void about_me();
+
 	void on_comboBox_currentIndexChanged(int index);
 
 	void on_pushButton_clicked();
@@ -58,6 +62,8 @@ private slots:
 	void on_pushButton_9_clicked();
 
 	void on_pushButton_12_clicked();
+
+	void on_pushButton_14_clicked();
 
 private:
 	QGraphicsScene *scene;

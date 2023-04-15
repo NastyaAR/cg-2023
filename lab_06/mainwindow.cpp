@@ -31,6 +31,21 @@ MainWindow::MainWindow(QWidget *parent)
 
 	curColors.fillColor = Qt::green;
 	curColors.borderColor = Qt::black;
+
+	QAction *about_act = ui->menubar->addAction("О программе");
+	connect(about_act, SIGNAL(triggered()), this, SLOT(about()));
+	QAction *about_me_act = ui->menubar->addAction("Об авторе");
+	connect(about_me_act, SIGNAL(triggered()), this, SLOT(about_me()));
+}
+
+void MainWindow::about()
+{
+	QMessageBox::information(this, "О программе", "Программа позволяет заполнить область затравочным алгоритмом заполения по строкам.\nРеализована возможность сравнения по времени алгоритмов с уп. списком рёбер (и САР) и затравочного.");
+}
+
+void MainWindow::about_me()
+{
+	QMessageBox::information(this, "Об авторе", "Алькина Анастасия ИУ7-44Б МГТУ им. Н.Э.Баумана");
 }
 
 MainWindow::~MainWindow()
@@ -41,8 +56,11 @@ MainWindow::~MainWindow()
 
 static point_t getSeedPoint(QLineEdit *lineX, QLineEdit *lineY)
 {
-	point_t seedPoint;
-	initPoint(seedPoint, lineX->text().toInt(), lineY->text().toInt());
+	bool ok1, ok2;
+	point_t seedPoint = {};
+	initPoint(seedPoint, lineX->text().toInt(&ok1), lineY->text().toInt(&ok2));
+	if (!ok1 || !ok2)
+		return {};
 	return seedPoint;
 }
 
@@ -173,7 +191,7 @@ void MainWindow::on_pushButton_3_clicked()
 
 	if (!ok1 || !ok2)
 	{
-		printf("error\n");
+		handle_error(INCORRECT_POINT);
 		return;
 	}
 
@@ -275,6 +293,11 @@ void MainWindow::on_pushButton_5_clicked()
 	QList <QTableWidgetItem *> list = ui->tableWidget->selectedItems();
 
 	points_t selectedPoints = getSelectesPoints(list, ui->tableWidget);
+	if (selectedPoints.size() == 0)
+	{
+		handle_error(NO_POINTS);
+		return;
+	}
 	lines_t joinLines = getJoinLines(selectedPoints, curColors.borderColor);
 
 	int i = getFigureFromPoints(figures, selectedPoints);
@@ -470,9 +493,32 @@ void MainWindow::on_pushButton_12_clicked()
 		handle_error(FILE_OPEN_ERROR);
 		return;
 	}
+
+	if (figures.size() == 0)
+	{
+		handle_error(NO_FIGURES);
+		return;
+	}
 	fprintf(file, "%lf ", get_avg_timeFillFigure(ui->graphicsView, scene, figures[0]));
 	fprintf(file, "%lf", get_avg_timeFillSeed(ui->graphicsView, scene, figures[0]));
 	fclose(file);
 	std::system("python3 /home/nastya/sem4/cg-2023/lab_06/graph_time.py");
+}
+
+
+void MainWindow::on_pushButton_14_clicked()
+{
+	bool ok1, ok2;
+	int x = ui->lineEdit->text().toInt(&ok1);
+	int y = ui->lineEdit_2->text().toInt(&ok2);
+
+	if (!ok1 || !ok2)
+	{
+		handle_error(INCORRECT_POINT);
+		return;
+	}
+
+	initPoint(curSeed, x, y);
+	setSeedPixel(figures, curSeed);
 }
 

@@ -11,6 +11,7 @@ CONFIG += c++11
 SOURCES += \
     closecommand.cpp \
     draw.cpp \
+    error_handler.cpp \
     fill.cpp \
     fillcommand.cpp \
     joincommand.cpp \
@@ -21,6 +22,7 @@ SOURCES += \
 HEADERS += \
     closecommand.h \
     draw.h \
+    error_handler.h \
     fill.h \
     fillcommand.h \
     joincommand.h \
