@@ -12,6 +12,7 @@
 #include "table.h"
 
 #define SCALE 1.1
+#define REPEAT 50
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -55,6 +56,8 @@ private slots:
 	void on_doubleSpinBox_valueChanged(double arg1);
 
 	void on_pushButton_9_clicked();
+
+	void on_pushButton_12_clicked();
 
 private:
 	QGraphicsScene *scene;

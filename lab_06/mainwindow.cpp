@@ -337,7 +337,7 @@ void MainWindow::on_pushButton_6_clicked()
 	figure_t newFigure;
 	figures_t holes;
 	point_t seedPoint = getSeedPoint(ui->lineEdit, ui->lineEdit_2);
-printf("in %d %d\n", seedPoint.x, seedPoint.y);
+
 	initFigure(newFigure, copyLines, copyPoints, curColors.fillColor, curColors.borderColor, true, holes, seedPoint);
 	if (!addHole) {
 		figures.push_back(newFigure);
@@ -378,7 +378,7 @@ void MainWindow::on_pushButton_8_clicked()
 		drawCountour(figures[i].lines, &image);
 
 	for (size_t i = 0; i < figures.size(); ++i)
-		fillSeed(figures[i], ui->graphicsView, &image, scene, delay);
+		fillSeed(figures[i], &image, scene, delay);
 
 	QPixmap pixmap = QPixmap::fromImage(image);
 	scene->addPixmap(pixmap);
@@ -403,5 +403,76 @@ void MainWindow::on_doubleSpinBox_valueChanged(double arg1)
 void MainWindow::on_pushButton_9_clicked()
 {
 	undoStack->undo();
+}
+
+static double get_avg_timeFillFigure(QGraphicsView *graphicsView, QGraphicsScene *scene, figure_t &figure)
+{
+	auto begin = std::chrono::high_resolution_clock::now();
+	auto end = std::chrono::high_resolution_clock::now();
+	double elapsed_ms = 0;
+
+	QImage image = QImage(graphicsView->width(), graphicsView->height(), QImage::Format_ARGB32);
+	image.fill(Qt::transparent);
+	drawCountour(figure.lines, &image);
+
+	double sum = 0;
+
+	for (int i = 0; i < REPEAT; i++)
+	{
+		begin = std::chrono::high_resolution_clock::now();
+		fillFigure(figure, &image, scene, 0.0, false);
+		end = std::chrono::high_resolution_clock::now();
+		elapsed_ms = (double) std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+		sum += elapsed_ms;
+	}
+
+	/*QPixmap pixmap = QPixmap::fromImage(image);
+	scene->addPixmap(pixmap);*/
+
+	return sum / REPEAT;
+}
+
+static double get_avg_timeFillSeed(QGraphicsView *graphicsView, QGraphicsScene *scene, figure_t &figure)
+{
+	auto begin = std::chrono::high_resolution_clock::now();
+	auto end = std::chrono::high_resolution_clock::now();
+	double elapsed_ms = 0;
+
+	double sum = 0;
+
+	QImage image = QImage(graphicsView->width(), graphicsView->height(), QImage::Format_ARGB32);
+	image.fill(Qt::transparent);
+	drawCountour(figure.lines, &image);
+
+	for (int i = 0; i < REPEAT; i++)
+	{
+		image.fill(Qt::transparent);
+		drawCountour(figure.lines, &image);
+		begin = std::chrono::high_resolution_clock::now();
+		fillSeed(figure, &image, scene, 0.0, false);
+		end = std::chrono::high_resolution_clock::now();
+		elapsed_ms = (double) std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+		sum += elapsed_ms;
+	}
+
+	QPixmap pixmap = QPixmap::fromImage(image);
+	scene->addPixmap(pixmap);
+
+	return sum / REPEAT;
+}
+
+void MainWindow::on_pushButton_12_clicked()
+{
+	FILE *file = fopen("alg_time.txt", "w");
+
+	if (!file)
+	{
+		handle_error(FILE_OPEN_ERROR);
+		return;
+	}
+	fprintf(file, "%lf ", get_avg_timeFillFigure(ui->graphicsView, scene, figures[0]));
+	fprintf(file, "%lf", get_avg_timeFillSeed(ui->graphicsView, scene, figures[0]));
+	fclose(file);
+	std::system("python3 /home/nastya/sem4/cg-2023/lab_06/graph_time.py");
 }
 

@@ -24,6 +24,6 @@ int getIndexCurFigure(figures_t &figures, figure_t &hole);
 void drawFigures(figures_t &figures, QImage *image, QGraphicsScene *scene, bool fill=true);
 bool isClosedFigure(figure_t &figure);
 void updateClosedFlag(figures_t &figures);
-void fillSeed(figure_t &figure, QGraphicsView *graphicsView, QImage *image, QGraphicsScene *scene, double delay=0.0, bool fill=true);
+void fillSeed(figure_t &figure, QImage *image, QGraphicsScene *scene, double delay=0.0, bool fill=true);
 
 #endif // FILL_H

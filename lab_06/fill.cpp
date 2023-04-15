@@ -143,7 +143,7 @@ void fillFigure(figure_t &figure, QImage *image, QGraphicsScene *scene, double d
 		for (size_t j = 0; j < listActiveEdges.size(); j += 2) {
 			if (delay != 0)
 				makeDelay(delay);
-			if (fill) drawStr((listActiveEdges[j].xWithScanLine), (listActiveEdges[j + 1].xWithScanLine), i, figure.fillColor, image);
+			drawStr((listActiveEdges[j].xWithScanLine), (listActiveEdges[j + 1].xWithScanLine), i, figure.fillColor, image);
 		}
 
 		if (fill) {
@@ -209,7 +209,7 @@ void updateClosedFlag(figures_t &figures)
 }
 
 
-void fillSeed(figure_t &figure, QGraphicsView *graphicsView, QImage *image, QGraphicsScene *scene, double delay, bool fill)
+void fillSeed(figure_t &figure, QImage *image, QGraphicsScene *scene, double delay, bool fill)
 {
 	std::stack <point_t> seedStack;
 	seedStack.push(figure.seedPixel);
@@ -223,14 +223,14 @@ void fillSeed(figure_t &figure, QGraphicsView *graphicsView, QImage *image, QGra
 		int y = curPixel.y;
 		int tmpY = y;
 
-		if (fill) draw_point(x, y, figure.fillColor, image);
+		draw_point(x, y, figure.fillColor, image);
 
 		int tmpX = x;
 		x = tmpX + 1;
 
 		while (image->pixelColor(x, y) == Qt::transparent)
 		{
-			if (fill) draw_point(x, y, figure.fillColor, image);
+			draw_point(x, y, figure.fillColor, image);
 			x++;
 		}
 
@@ -240,7 +240,7 @@ void fillSeed(figure_t &figure, QGraphicsView *graphicsView, QImage *image, QGra
 
 		while (image->pixelColor(x, y) == Qt::transparent)
 		{
-			if (fill) draw_point(x, y, figure.fillColor, image);
+			draw_point(x, y, figure.fillColor, image);
 			x--;
 		}
 
