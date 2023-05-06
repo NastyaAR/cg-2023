@@ -6,11 +6,10 @@
 #define MATRIX_SIZE 2
 #define PARAM_SIZE 1
 
-int isVisible(Point point, Line line);
-Point getInterPoint(Line line1 , Line line2);
-bool isInter(Line line1, Line line2);
+bool isVisible(Line src, Point p, int norm);
+bool findInter(Point &p, Line src, Line sec, int norm);
 void addInterPoint(points_t *result, int *nRes, Point interP);
-void copyResult(points_t &poly, points_t &result);
-points_t clip(points_t &poly, points_t &clipper);
+points_t clip(points_t &poly, figure_t &clipper);
+int checkConvex(figure_t &cut);
 
 #endif // CLIP_H

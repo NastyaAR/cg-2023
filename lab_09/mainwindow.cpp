@@ -21,11 +21,11 @@ MainWindow::MainWindow(QWidget *parent)
 
 	ui->label_2->setStyleSheet("background-color: lightgreen");
 	ui->label_3->setStyleSheet("background-color: pink");
-	ui->label_4->setStyleSheet("background-color: lightblue");
+	ui->label_4->setStyleSheet("background-color: black");
 
 	curColors.clipperColor = QColor("#90EE90");
 	curColors.clipPolyColor = QColor("#FFC0CB");
-	curColors.resultColor = QColor("#ADD8E6");
+	curColors.resultColor = QColor(Qt::black);
 
 	QAction *about_act = ui->menubar->addAction("О программе");
 	connect(about_act, SIGNAL(triggered()), this, SLOT(about()));
@@ -35,6 +35,9 @@ MainWindow::MainWindow(QWidget *parent)
 	initFigure(clipper, curColors.clipperColor, false);
 	initFigure(srcFigure, curColors.clipPolyColor, false);
 	initFigure(destFigure, curColors.resultColor, false);
+
+	ui->listWidget->insertItem(0, QString("Отсекатель"));
+	ui->listWidget_2->insertItem(0, QString("Многоугольник"));
 }
 
 void MainWindow::about()
@@ -103,14 +106,40 @@ void MainWindow::wheelEvent(QWheelEvent *event)
 	}
 }
 
+template <typename T>
+void copyVector(T &v1, T &v2)
+{
+	for (size_t i = 0; i < v2.size(); ++i)
+		v1.push_back(v2[i]);
+}
+
 void MainWindow::on_pushButton_9_clicked()
 {
-	printf("1\n");
+	points_t tmp;
+	copyVector(tmp, srcFigure.points);
+	clipper.points.push_back(clipper.points[0]);
+	points_t destPoints = clip(tmp, clipper);
+	lines_t destLines;
+	getLines(destLines, destPoints);
+
+	QImage image = QImage(ui->graphicsView->width(), ui->graphicsView->height(), QImage::Format_ARGB32);
+	image.fill(Qt::transparent);
+	QPainter painter(&image);
+	painter.setBrush(curColors.resultColor);
+	painter.setPen(curColors.resultColor);
+
+	initFigure(destFigure, destPoints, destLines, curColors.resultColor, true);
+
+	draw(clipper, srcFigure, destFigure, &painter, curColors);
+
+	QPixmap pixmap = QPixmap::fromImage(image);
+	scene->clear();
+	scene->addPixmap(pixmap);
 }
 
 void MainWindow::mousePressEvent(QMouseEvent* event)
 {
-	if (ui->comboBox->currentIndex() == INPUT_MODE)
+	if (ui->comboBox_2->currentIndex() == INPUT_MODE)
 	{
 		QRect view = ui->graphicsView->geometry();
 		QImage image = QImage(ui->graphicsView->width(), ui->graphicsView->height(), QImage::Format_ARGB32);
@@ -121,12 +150,141 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 
 		if (view.contains(event->pos())) {
 			Point p(event->pos().x() - view.x(), event->pos().y() - view.y() - menuBar()->geometry().height());
-			drawPoint(p, &painter);
+			if (ui->comboBox->currentIndex() == CLIPPER) {
+				addPointInFigure(clipper, p);
+				addPointInList(ui->listWidget, p);
+				if (clipper.points.size() > 1)
+					addLineInFigure(clipper, Line(clipper.points[clipper.points.size() - 2], p));
+			}
+			else if (ui->comboBox->currentIndex() == FIGURE) {
+				addPointInFigure(srcFigure, p);
+				addPointInList(ui->listWidget_2, p);
+				if (srcFigure.points.size() > 1)
+					addLineInFigure(srcFigure, Line(srcFigure.points[srcFigure.points.size() - 2], p));
+			}
 		}
 
+		drawFigure(clipper, &painter);
+
+		painter.setBrush(curColors.clipPolyColor);
+		painter.setPen(curColors.clipPolyColor);
+		drawFigure(srcFigure, &painter);
+
 		QPixmap pixmap = QPixmap::fromImage(image);
-		//scene->clear();
+		scene->clear();
 		scene->addPixmap(pixmap);
 	}
+}
+
+
+void MainWindow::on_pushButton_6_clicked()
+{
+	ui->graphicsView->resetTransform();
+}
+
+
+void MainWindow::on_pushButton_5_clicked()
+{
+	QImage image = QImage(ui->graphicsView->width(), ui->graphicsView->height(), QImage::Format_ARGB32);
+	image.fill(Qt::transparent);
+	QPainter painter(&image);
+	painter.setBrush(curColors.clipperColor);
+	painter.setPen(curColors.clipperColor);
+
+	if (ui->comboBox->currentIndex() == CLIPPER)
+	{
+		Line closeLine(clipper.points[clipper.points.size() - 1], clipper.points[0]);
+		addLineInFigure(clipper, closeLine);
+		if (! isConvex(clipper)) {
+			QMessageBox::critical(NULL, "Ошибка", "Отсекатель невыпуклый! Повторите ввод отсекателя.");
+			resetFigure(clipper);
+			goto draw;
+		}
+		clipper.isClose = true;
+	}
+	else if (ui->comboBox->currentIndex() == FIGURE)
+	{
+		Line closeLine(srcFigure.points[srcFigure.points.size() - 1], srcFigure.points[0]);
+		addLineInFigure(srcFigure, closeLine);
+		srcFigure.isClose = true;
+	}
+
+	draw:
+	drawFigure(clipper, &painter);
+
+	painter.setBrush(curColors.clipPolyColor);
+	painter.setPen(curColors.clipPolyColor);
+	drawFigure(srcFigure, &painter);
+
+	QPixmap pixmap = QPixmap::fromImage(image);
+	scene->clear();
+	scene->addPixmap(pixmap);
+}
+
+
+void MainWindow::on_pushButton_7_clicked()
+{
+	resetFigure(clipper);
+	resetFigure(destFigure);
+	resetFigure(srcFigure);
+
+	ui->listWidget->clear();
+	ui->listWidget_2->clear();
+
+	ui->lineEdit->clear();
+	ui->lineEdit_2->clear();
+
+	ui->listWidget->insertItem(0, QString("Отсекатель"));
+	ui->listWidget_2->insertItem(0, QString("Многоугольник"));
+
+	QImage image = QImage(ui->graphicsView->width(), ui->graphicsView->height(), QImage::Format_ARGB32);
+	image.fill(Qt::transparent);
+	QPixmap pixmap = QPixmap::fromImage(image);
+	scene->clear();
+	scene->addPixmap(pixmap);
+}
+
+
+
+void MainWindow::on_pushButton_4_clicked()
+{
+	bool ok1, ok2;
+
+	int x = ui->lineEdit->text().toInt(&ok1);
+	int y = ui->lineEdit_2->text().toInt(&ok2);
+
+	if (!ok1 || !ok2)
+		return;
+
+	ui->lineEdit->clear();
+	ui->lineEdit_2->clear();
+
+	QImage image = QImage(ui->graphicsView->width(), ui->graphicsView->height(), QImage::Format_ARGB32);
+	image.fill(Qt::transparent);
+	QPainter painter(&image);
+
+	Point p(x, y);
+
+	if (ui->comboBox->currentIndex() == CLIPPER) {
+		painter.setBrush(curColors.clipperColor);
+		painter.setPen(curColors.clipperColor);
+		addPointInFigure(clipper, p);
+		addPointInList(ui->listWidget, p);
+		if (clipper.points.size() > 1)
+			addLineInFigure(clipper, Line(clipper.points[clipper.points.size() - 2], p));
+	}
+	else if (ui->comboBox->currentIndex() == FIGURE) {
+		painter.setBrush(curColors.clipPolyColor);
+		painter.setPen(curColors.clipPolyColor);
+		addPointInFigure(srcFigure, p);
+		addPointInList(ui->listWidget_2, p);
+		if (srcFigure.points.size() > 1)
+			addLineInFigure(srcFigure, Line(srcFigure.points[srcFigure.points.size() - 2], p));
+	}
+
+	draw(clipper, srcFigure, destFigure, &painter, curColors);
+	QPixmap pixmap = QPixmap::fromImage(image);
+	scene->clear();
+	scene->addPixmap(pixmap);
 }
 

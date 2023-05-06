@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>982</width>
-    <height>754</height>
+    <width>1154</width>
+    <height>890</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -188,6 +188,16 @@
      </layout>
     </item>
     <item row="4" column="0">
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QListWidget" name="listWidget"/>
+      </item>
+      <item>
+       <widget class="QListWidget" name="listWidget_2"/>
+      </item>
+     </layout>
+    </item>
+    <item row="5" column="0">
      <layout class="QVBoxLayout" name="verticalLayout_5">
       <item>
        <widget class="QPushButton" name="pushButton_6">
@@ -223,7 +233,7 @@
       </item>
      </layout>
     </item>
-    <item row="0" column="1" rowspan="5">
+    <item row="0" column="1" rowspan="6">
      <widget class="QGraphicsView" name="graphicsView"/>
     </item>
    </layout>
@@ -233,7 +243,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>982</width>
+     <width>1154</width>
      <height>30</height>
     </rect>
    </property>

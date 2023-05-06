@@ -11,6 +11,11 @@ enum modes {
 	VIEW_MODE,
 };
 
+enum whatInput {
+	CLIPPER,
+	FIGURE,
+};
+
 struct currentColors {
 	QColor clipperColor;
 	QColor clipPolyColor;
@@ -27,9 +32,8 @@ public:
 	bool operator==(Point &point) const { return (this->x == point.x) && (this->y == point.y); };
 	bool operator!=(Point &point) const { return !(*this == point); };
 
-	Point operator=(Point &point) { x = point.getX(); y = point.getY(); return (*this); };
-
-	Point operator-(Point &p) const { return Point(x - p.x, y - p.y); };
+	Point operator-(Point p) const { return Point(x - p.x, y - p.y); };
+	Point operator+(Point p) const { return Point(x + p.x, y + p.y); };
 
 	int getX() { return this->x; };
 	int getY() { return this->y; };
