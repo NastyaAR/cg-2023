@@ -15,7 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
 	ui->graphicsView->setRenderHint(QPainter::Antialiasing); // отключение сглаживания
 	ui->graphicsView->setScene(scene);
 
-	//undoStack = new QUndoStack(this);
+	undoStack = new QUndoStack(this);
 
 	ui->graphicsView->viewport()->installEventFilter(this); // всё, что происходит в qgraphicsview отправляется в обработчик EventFilter
 
@@ -53,6 +53,7 @@ void MainWindow::about_me()
 MainWindow::~MainWindow()
 {
 	delete ui;
+	delete undoStack;
 }
 
 static void update_color_on_label(QLabel *label, QColor color)
@@ -151,12 +152,16 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 		if (view.contains(event->pos())) {
 			Point p(event->pos().x() - view.x(), event->pos().y() - view.y() - menuBar()->geometry().height());
 			if (ui->comboBox->currentIndex() == CLIPPER) {
+				QUndoCommand *drawCmd = new drawCommand(srcFigure, clipper, curColors, scene, ui->listWidget, ui->listWidget_2);
+				undoStack->push(drawCmd);
 				addPointInFigure(clipper, p);
 				addPointInList(ui->listWidget, p);
 				if (clipper.points.size() > 1)
 					addLineInFigure(clipper, Line(clipper.points[clipper.points.size() - 2], p));
 			}
 			else if (ui->comboBox->currentIndex() == FIGURE) {
+				QUndoCommand *drawCmd = new drawCommand(srcFigure, clipper, curColors, scene, ui->listWidget, ui->listWidget_2);
+				undoStack->push(drawCmd);
 				addPointInFigure(srcFigure, p);
 				addPointInList(ui->listWidget_2, p);
 				if (srcFigure.points.size() > 1)
@@ -286,5 +291,11 @@ void MainWindow::on_pushButton_4_clicked()
 	QPixmap pixmap = QPixmap::fromImage(image);
 	scene->clear();
 	scene->addPixmap(pixmap);
+}
+
+
+void MainWindow::on_pushButton_8_clicked()
+{
+	undoStack->undo();
 }
 

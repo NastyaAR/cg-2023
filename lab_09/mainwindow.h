@@ -4,9 +4,9 @@
 #include <QMainWindow>
 #include <QMessageBox>
 #include <QWheelEvent>
-#include "clip.h"
-#include "draw.h"
-#include "figure.h"
+#include <QUndoStack>
+#include "drawcommand.h"
+
 
 #define SCALE 1.1
 
@@ -43,6 +43,8 @@ private slots:
 
 	void on_pushButton_4_clicked();
 
+	void on_pushButton_8_clicked();
+
 private:
 	Ui::MainWindow *ui;
 	QGraphicsScene *scene;
@@ -51,5 +53,7 @@ private:
 	figure_t clipper;
 	figure_t srcFigure;
 	figure_t destFigure;
+
+	QUndoStack *undoStack = nullptr;
 };
 #endif // MAINWINDOW_H

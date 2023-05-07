@@ -11,6 +11,7 @@ CONFIG += c++11
 SOURCES += \
     clip.cpp \
     draw.cpp \
+    drawcommand.cpp \
     figure.cpp \
     main.cpp \
     mainwindow.cpp
@@ -18,6 +19,7 @@ SOURCES += \
 HEADERS += \
     clip.h \
     draw.h \
+    drawcommand.h \
     figure.h \
     mainwindow.h \
     structures.h
